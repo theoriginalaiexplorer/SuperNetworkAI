@@ -5,9 +5,14 @@
     <div class="card-body p-4">
       <h2 class="card-title mb-4 text-center fw-bold">Create your account</h2>
 
+      <% if (it.error) { %>
+        <div class="alert alert-danger">Signup failed. Please try again.</div>
+      <% } %>
       <div id="auth-error"></div>
 
       <form
+        method="post"
+        action="/auth/signup"
         hx-post="/auth/signup"
         hx-target="#auth-error"
         hx-swap="outerHTML"

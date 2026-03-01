@@ -13,31 +13,52 @@
     crossorigin="anonymous"
   />
 
-  <!-- HTMX -->
-  <script
-    src="https://unpkg.com/htmx.org@2.0.4"
-    integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+"
-    defer
-  ></script>
+  <!-- Built client-side assets (includes HTMX, Alpine.js and stores) -->
+  <script src="/public/assets/main-BHib6PCM.js" defer></script>
 
-  <!-- Alpine.js morph plugin (must load before Alpine core) -->
-  <script src="https://unpkg.com/@alpinejs/morph@3.x.x/dist/cdn.min.js" defer></script>
+  <!-- HTMX debug + Loading Event Handlers -->
+  <script>
+    // Debug: confirm HTMX loaded (check after defer scripts execute)
+    window.addEventListener('load', function() {
+      console.log('[HTMX] loaded:', typeof htmx !== 'undefined' ? 'YES v' + htmx.version : 'NO — missing from bundle');
+    });
 
-  <!-- Alpine.js -->
-  <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    document.addEventListener('htmx:beforeRequest', function(e) {
+      console.log('[HTMX] beforeRequest', e.detail.requestConfig.verb.toUpperCase(), e.detail.requestConfig.path);
+      if (window.Alpine && Alpine.store('loading')) {
+        Alpine.store('loading').startLoading('Loading...');
+      }
+    });
+    document.addEventListener('htmx:afterRequest', function(e) {
+      console.log('[HTMX] afterRequest status=' + e.detail.xhr.status, 'path=' + e.detail.pathInfo?.requestPath);
+      if (window.Alpine && Alpine.store('loading')) {
+        Alpine.store('loading').stopLoading();
+      }
+    });
+    document.addEventListener('htmx:responseError', function(e) {
+      console.error('[HTMX] responseError status=' + e.detail.xhr.status, e.detail);
+      if (window.Alpine && Alpine.store('loading')) {
+        Alpine.store('loading').stopLoading();
+      }
+    });
+    document.addEventListener('htmx:sendError', function(e) {
+      console.error('[HTMX] sendError — could not reach server', e.detail);
+    });
+    document.addEventListener('htmx:beforeSwap', function(e) {
+      console.log('[HTMX] beforeSwap status=' + e.detail.xhr.status, 'isError=' + e.detail.isError);
+    });
+  </script>
 </head>
 <body>
   <%~ it.body %>
   
-  <!-- Loading Overlay -->
+  <!-- Loading Overlay (disabled temporarily for testing) -->
+  <!--
   <div
-    Alpine.data("loading", () => ({
-      isLoading: false,
-      message: '',
-    })
+    x-cloak
     class="position-fixed top-0 left-0 w-100 h-100 d-flex justify-content-center align-items-center bg-dark bg-opacity-50"
-    style="display: none; z-index: 9999;"
-    x-show="loadingStore().isLoading"
+    style="z-index: 9999;"
+    x-show="$store.loading.isLoading"
     id="loading-overlay"
   >
     <div class="card text-center" style="min-width: 300px;">
@@ -51,9 +72,11 @@
           animation: spin 1.2s linear infinite;
         ">
         </div>
-        <p class="mb-3 text-white"><span x-text="loadingStore().message">Loading...</span></p>
+        <p class="mb-3 text-white"><span x-text="$store.loading.message">Loading...</span></p>
       </div>
     </div>
+  </div>
+  -->
 
   <style>
     @keyframes spin {
@@ -66,6 +89,7 @@
       border-right: 2px solid transparent;
       border-radius: 50%;
     }
+    [x-cloak] { display: none !important; }
   </style>
 </body>
 </html>

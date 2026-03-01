@@ -65,6 +65,23 @@ func (h *ProfileHandler) UpdateProfile(c fiber.Ctx) error {
 		return model.NewAppError(model.ErrValidation, "invalid request body")
 	}
 
+	// Length validation
+	if body.DisplayName != nil && len(*body.DisplayName) > 100 {
+		return model.NewAppError(model.ErrValidation, "display_name must be 100 characters or fewer")
+	}
+	if body.Tagline != nil && len(*body.Tagline) > 150 {
+		return model.NewAppError(model.ErrValidation, "tagline must be 150 characters or fewer")
+	}
+	if body.Bio != nil && len(*body.Bio) > 2000 {
+		return model.NewAppError(model.ErrValidation, "bio must be 2000 characters or fewer")
+	}
+	if body.AvatarURL != nil && len(*body.AvatarURL) > 500 {
+		return model.NewAppError(model.ErrValidation, "avatar_url must be 500 characters or fewer")
+	}
+	if body.Location != nil && len(*body.Location) > 100 {
+		return model.NewAppError(model.ErrValidation, "location must be 100 characters or fewer")
+	}
+
 	_, err := h.pool.Exec(c.Context(),
 		`UPDATE profiles SET
 		   display_name  = COALESCE($2, display_name),
@@ -157,14 +174,17 @@ func (h *ProfileHandler) triggerEmbedding(userIDStr string) {
 		var bio string
 		var skills, interests, intent []string
 		var love, goodAt, worldNeeds, paidFor string
-		_ = h.pool.QueryRow(ctx,
+		if err := h.pool.QueryRow(ctx,
 			`SELECT p.bio, p.skills, p.interests, p.intent,
 			        COALESCE(ik.what_you_love,''), COALESCE(ik.what_youre_good_at,''),
 			        COALESCE(ik.what_world_needs,''), COALESCE(ik.what_you_can_be_paid_for,'')
 			 FROM profiles p
 			 LEFT JOIN ikigai_profiles ik ON ik.user_id = p.user_id
 			 WHERE p.user_id = $1`, userIDStr,
-		).Scan(&bio, &skills, &interests, &intent, &love, &goodAt, &worldNeeds, &paidFor)
+		).Scan(&bio, &skills, &interests, &intent, &love, &goodAt, &worldNeeds, &paidFor); err != nil {
+			h.logger.Error("fetch profile for embedding", "error", err, "user_id", userIDStr)
+			return
+		}
 
 		text := embedding.BuildEmbeddingText(
 			embedding.ProfileInput{Bio: bio, Skills: skills, Interests: interests, Intent: intent},

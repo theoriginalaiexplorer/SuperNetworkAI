@@ -37,8 +37,14 @@ func NewMatchHandler(svc service.MatchService, logger *slog.Logger) *MatchHandle
 func (h *MatchHandler) GetMatches(c fiber.Ctx) error {
 	userID := middleware.UserFromCtx(c)
 
-	limit, _ := strconv.Atoi(c.Query("limit", "20"))
-	offset, _ := strconv.Atoi(c.Query("offset", "0"))
+	limit := 20
+	if v, err := strconv.Atoi(c.Query("limit", "20")); err == nil && v > 0 && v <= 100 {
+		limit = v
+	}
+	offset := 0
+	if v, err := strconv.Atoi(c.Query("offset", "0")); err == nil && v >= 0 {
+		offset = v
+	}
 
 	matches, err := h.svc.GetMatches(c.Context(), userID, service.MatchFilter{
 		Category: c.Query("category"),

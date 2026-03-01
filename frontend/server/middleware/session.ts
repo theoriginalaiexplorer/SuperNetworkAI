@@ -15,8 +15,9 @@ let refreshing: Promise<Session | null> | null = null;
 // or null if no cookie is present.
 export function getSession(c: Context): Session | null {
   const access = getCookie(c, "sn_access");
-  const refresh = getCookie(c, "sn_refresh");
-  if (!access || !refresh) return null;
+  if (!access) return null;
+  // sn_refresh has Path=/auth so it's only present on /auth/* requests
+  const refresh = getCookie(c, "sn_refresh") ?? "";
   return { accessToken: access, refreshToken: refresh };
 }
 
@@ -48,16 +49,18 @@ export async function refreshSession(
       const existingJwt = getCookie(c, "sn_access");
       if (!existingJwt) return null;
       let sub: string;
+      let email: string = "";
       try {
         const claims = decodeJwt(existingJwt);
         if (!claims.sub) return null;
         sub = claims.sub;
+        email = typeof claims.email === "string" ? claims.email : "";
       } catch {
         return null;
       }
 
       const BFF_SECRET = new TextEncoder().encode(process.env.BFF_JWT_SECRET!);
-      const newBffJwt = await new SignJWT({ sub })
+      const newBffJwt = await new SignJWT({ sub, email })
         .setProtectedHeader({ alg: "HS256" })
         .setIssuedAt()
         .setExpirationTime("1h")
@@ -75,15 +78,19 @@ export async function refreshSession(
 }
 
 // setSessionCookies writes the sn_access and sn_refresh HttpOnly cookies.
+// Both use { append: true } so Hono emits two separate Set-Cookie headers
+// instead of the second overwriting the first.
 export function setSessionCookies(c: Context, session: Session): void {
   const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
   c.header(
     "Set-Cookie",
-    `sn_access=${session.accessToken}; HttpOnly${secure}; SameSite=Lax; Path=/; Max-Age=3600`
+    `sn_access=${session.accessToken}; HttpOnly${secure}; SameSite=Lax; Path=/; Max-Age=3600`,
+    { append: true }
   );
   c.header(
     "Set-Cookie",
-    `sn_refresh=${session.refreshToken}; HttpOnly${secure}; SameSite=Lax; Path=/auth; Max-Age=604800`
+    `sn_refresh=${session.refreshToken}; HttpOnly${secure}; SameSite=Lax; Path=/auth; Max-Age=604800`,
+    { append: true }
   );
 }
 

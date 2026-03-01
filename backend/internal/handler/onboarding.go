@@ -74,6 +74,19 @@ func (h *OnboardingHandler) SaveIkigai(c fiber.Ctx) error {
 		body.WhatWorldNeeds == "" || body.WhatYouCanBePaidFor == "" {
 		return model.NewAppError(model.ErrValidation, "all four Ikigai fields are required")
 	}
+	for field, val := range map[string]string{
+		"what_you_love":             body.WhatYouLove,
+		"what_youre_good_at":        body.WhatYoureGoodAt,
+		"what_world_needs":          body.WhatWorldNeeds,
+		"what_you_can_be_paid_for":  body.WhatYouCanBePaidFor,
+	} {
+		if len(val) < 10 {
+			return model.NewAppError(model.ErrValidation, field+" must be at least 10 characters")
+		}
+		if len(val) > 1000 {
+			return model.NewAppError(model.ErrValidation, field+" must be 1000 characters or fewer")
+		}
+	}
 
 	// Upsert ikigai
 	_, err := h.pool.Exec(c.Context(),
@@ -134,9 +147,12 @@ func (h *OnboardingHandler) asyncIkigaiPost(userIDStr string, answers service.Ik
 	// Trigger re-embedding
 	var bio string
 	var skills, interests, intent []string
-	_ = h.pool.QueryRow(ctx,
+	if err := h.pool.QueryRow(ctx,
 		`SELECT bio, skills, interests, intent FROM profiles WHERE user_id=$1`, userIDStr,
-	).Scan(&bio, &skills, &interests, &intent)
+	).Scan(&bio, &skills, &interests, &intent); err != nil {
+		h.logger.Error("fetch profile for ikigai embedding", "error", err, "user_id", userIDStr)
+		return
+	}
 
 	text := embedding.BuildEmbeddingText(
 		embedding.ProfileInput{Bio: bio, Skills: skills, Interests: interests, Intent: intent},
@@ -221,7 +237,8 @@ func (h *OnboardingHandler) ImportCV(c fiber.Ctx) error {
 
 	data, err := service.DownloadPDF(c.Context(), body.URL)
 	if err != nil {
-		return model.NewAppError(model.ErrValidation, "failed to download PDF: "+err.Error())
+		h.logger.Error("download PDF", "error", err)
+		return model.NewAppError(model.ErrValidation, "failed to download PDF")
 	}
 
 	text, err := service.ExtractPDFText(data)

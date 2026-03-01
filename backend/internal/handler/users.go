@@ -34,6 +34,28 @@ func NewUserHandler(pool *pgxpool.Pool, logger *slog.Logger) *UserHandler {
 // @Router      /api/v1/users/me [get]
 func (h *UserHandler) GetMe(c fiber.Ctx) error {
 	userID := middleware.UserFromCtx(c)
+	email := middleware.EmailFromCtx(c)
+
+	// Upsert user row on first access — idempotent, no-op on subsequent calls.
+	// Also upserts a blank profile so LEFT JOINs below always return a row.
+	if email != "" {
+		if _, err := h.pool.Exec(c.Context(),
+			`INSERT INTO users (id, email) VALUES ($1, $2)
+			 ON CONFLICT (id) DO NOTHING`,
+			userID, email,
+		); err != nil {
+			h.logger.Error("upsert user", "error", err)
+			return model.NewAppError(model.ErrInternal, "failed to initialise user")
+		}
+		if _, err := h.pool.Exec(c.Context(),
+			`INSERT INTO profiles (user_id) VALUES ($1)
+			 ON CONFLICT (user_id) DO NOTHING`,
+			userID,
+		); err != nil {
+			h.logger.Error("upsert profile", "error", err)
+			return model.NewAppError(model.ErrInternal, "failed to initialise profile")
+		}
+	}
 
 	row := h.pool.QueryRow(c.Context(),
 		`SELECT u.id, u.email, u.created_at,
@@ -51,7 +73,7 @@ func (h *UserHandler) GetMe(c fiber.Ctx) error {
 
 	var (
 		uID, pID                                        uuid.UUID
-		email, displayName, tagline, bio                string
+		userEmail, displayName, tagline, bio            string
 		avatarURL, portfolioURL, linkedinURL            *string
 		githubURL, twitterURL, location, timezone       *string
 		skills, interests, intent                       []string
@@ -63,7 +85,7 @@ func (h *UserHandler) GetMe(c fiber.Ctx) error {
 	)
 
 	err := row.Scan(
-		&uID, &email, &uCreatedAt,
+		&uID, &userEmail, &uCreatedAt,
 		&pID, &displayName, &tagline, &bio,
 		&avatarURL, &portfolioURL, &linkedinURL, &githubURL,
 		&twitterURL, &location, &timezone, &skills, &interests,
@@ -78,7 +100,7 @@ func (h *UserHandler) GetMe(c fiber.Ctx) error {
 	return c.JSON(fiber.Map{
 		"user": fiber.Map{
 			"id":         uID,
-			"email":      email,
+			"email":      userEmail,
 			"created_at": uCreatedAt,
 		},
 		"profile": fiber.Map{

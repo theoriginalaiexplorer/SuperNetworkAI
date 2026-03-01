@@ -212,7 +212,8 @@ func (h *Hub) handleJoinRoom(cl *client, convIDStr string) {
 		return
 	}
 
-	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 
 	var isMember bool
 	if err := h.pool.QueryRow(ctx,
@@ -246,7 +247,8 @@ func (h *Hub) handleMessage(cl *client, msg wsMsg) {
 		return
 	}
 
-	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 
 	// 1. Verify sender is a member of this conversation
 	var isMember bool
@@ -287,7 +289,7 @@ func (h *Hub) handleMessage(cl *client, msg wsMsg) {
 		return
 	}
 
-	// 4. Verify no blocks
+	// 4. Verify no blocks (fail closed — block check error prevents message delivery)
 	var blocked bool
 	if err := h.pool.QueryRow(ctx,
 		`SELECT EXISTS (
@@ -296,7 +298,11 @@ func (h *Hub) handleMessage(cl *client, msg wsMsg) {
               OR (blocker_id = $2 AND blocked_id = $1)
          )`,
 		cl.userID, otherUserID,
-	).Scan(&blocked); err == nil && blocked {
+	).Scan(&blocked); err != nil {
+		h.logger.Error("ws block check failed", "error", err)
+		cl.send(wsMsg{Type: "error", Message: "failed to send message"})
+		return
+	} else if blocked {
 		cl.send(wsMsg{Type: "error", Message: model.ErrForbidden})
 		return
 	}

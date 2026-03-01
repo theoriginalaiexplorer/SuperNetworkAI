@@ -17,7 +17,7 @@ pageRoutes.use("*", sessionMiddleware);
 // --- Public pages ---
 pageRoutes.get("/", (c) => renderPartial(c, "pages/landing", {}));
 pageRoutes.get("/login", (c) => renderPartial(c, "pages/login", { error: c.req.query("error") }));
-pageRoutes.get("/signup", (c) => renderPartial(c, "pages/signup", {}));
+pageRoutes.get("/signup", (c) => renderPartial(c, "pages/signup", { error: c.req.query("error") }));
 pageRoutes.get("/privacy", (c) => renderPartial(c, "pages/privacy", {}));
 pageRoutes.get("/terms", (c) => renderPartial(c, "pages/terms", {}));
 

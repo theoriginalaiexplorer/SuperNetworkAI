@@ -16,9 +16,9 @@
   <h1 class="h3 mb-4">Discover matches</h1>
 
   <%
-    const cats = ['', 'cofounder', 'teammate', 'client'];
-    const labels = { '': 'All', cofounder: 'Cofounders', teammate: 'Teammates', client: 'Clients' };
-    const currentCat = it.category ?? '';
+    const cats = ["", "cofounder", "teammate", "client"];
+    const labels = { "": "All", cofounder: "Cofounders", teammate: "Teammates", client: "Clients" };
+    const currentCat = it.category || "";
   %>
 
   <!-- NL search bar -->
@@ -54,7 +54,7 @@
   <ul class="nav nav-tabs mb-4" id="categoryTabs">
     <% cats.forEach(cat => { %>
       <li class="nav-item">
-        <a class="nav-link <%= currentCat === cat ? 'active' : '' %>"
+        <a class="nav-link <%= currentCat === cat ? "active" : "" %>"
            href="/discover?category=<%= cat %>"
            hx-get="/discover/matches?category=<%= cat %>"
            hx-target="#match-list"

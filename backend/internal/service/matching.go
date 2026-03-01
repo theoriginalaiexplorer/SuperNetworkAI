@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"strings"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -154,10 +153,12 @@ func (s *matchService) GetExplanation(ctx context.Context, matchedUserID, curren
 	}
 
 	// Persist so subsequent calls are free
-	_, _ = s.pool.Exec(ctx,
+	if _, err := s.pool.Exec(ctx,
 		`UPDATE match_cache SET explanation = $3, updated_at = NOW()
 		 WHERE user_id = $1 AND matched_user_id = $2`,
-		currentUserID, matchedUserID, text)
+		currentUserID, matchedUserID, text); err != nil {
+		s.logger.Warn("cache explanation write failed", "error", err)
+	}
 
 	return text, nil
 }
@@ -232,7 +233,7 @@ func (s *matchService) RefreshCacheForUser(ctx context.Context, userID uuid.UUID
 		if len(cats) == 0 {
 			continue
 		}
-		newIDs = append(newIDs, "'"+c.userID.String()+"'")
+		newIDs = append(newIDs, c.userID.String())
 
 		_, err := s.pool.Exec(ctx, `
 			INSERT INTO match_cache (user_id, matched_user_id, score, categories)
@@ -250,17 +251,21 @@ func (s *matchService) RefreshCacheForUser(ctx context.Context, userID uuid.UUID
 
 	// Remove stale non-dismissed rows that fell below the threshold
 	if len(newIDs) > 0 {
-		_, _ = s.pool.Exec(ctx, fmt.Sprintf(`
-			DELETE FROM match_cache
-			WHERE user_id = $1
-			  AND dismissed = false
-			  AND matched_user_id NOT IN (%s)
-		`, strings.Join(newIDs, ",")), userID)
+		if _, err := s.pool.Exec(ctx,
+			`DELETE FROM match_cache
+			 WHERE user_id = $1
+			   AND dismissed = false
+			   AND matched_user_id != ALL($2::uuid[])`,
+			userID, newIDs); err != nil {
+			s.logger.Warn("delete stale match_cache rows failed", "error", err)
+		}
 	} else {
 		// No candidates at all — remove all non-dismissed rows
-		_, _ = s.pool.Exec(ctx,
+		if _, err := s.pool.Exec(ctx,
 			`DELETE FROM match_cache WHERE user_id = $1 AND dismissed = false`,
-			userID)
+			userID); err != nil {
+			s.logger.Warn("delete all match_cache rows failed", "error", err)
+		}
 	}
 
 	return nil

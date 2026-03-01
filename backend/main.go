@@ -23,6 +23,8 @@ import (
 
 	"github.com/gofiber/fiber/v3"
 
+	"github.com/gofiber/fiber/v3/middleware/limiter"
+
 	_ "supernetwork/backend/docs"
 	"supernetwork/backend/internal/config"
 	"supernetwork/backend/internal/db"
@@ -92,7 +94,12 @@ func main() {
 	app.Use(middleware.Logger(logger))
 
 	// --- Health routes ---
-	h := health.New(pool)
+	var h *health.Handler
+	if cfg.EmbeddingProvider == "ollama" {
+		h = health.NewWithOllama(pool, cfg.OllamaBaseURL)
+	} else {
+		h = health.New(pool)
+	}
 	app.Get("/healthz", h.Liveness)
 	app.Get("/readyz", h.Readiness)
 
@@ -164,9 +171,27 @@ func main() {
 
 	api.Get("/matches", matchH.GetMatches)
 	api.Post("/matches/:matchedUserId/dismiss", matchH.DismissMatch)
-	api.Get("/matches/:matchedUserId/explanation", matchH.GetExplanation)
+	api.Get("/matches/:matchedUserId/explanation", limiter.New(limiter.Config{
+		Max:        20,
+		Expiration: time.Minute,
+		KeyGenerator: func(c fiber.Ctx) string {
+			return middleware.UserFromCtx(c).String()
+		},
+		LimitReached: func(c fiber.Ctx) error {
+			return model.NewAppError(model.ErrRateLimited, "too many explanation requests")
+		},
+	}), matchH.GetExplanation)
 
-	api.Post("/search", searchH.Search)
+	api.Post("/search", limiter.New(limiter.Config{
+		Max:        10,
+		Expiration: time.Minute,
+		KeyGenerator: func(c fiber.Ctx) string {
+			return middleware.UserFromCtx(c).String()
+		},
+		LimitReached: func(c fiber.Ctx) error {
+			return model.NewAppError(model.ErrRateLimited, "too many search requests")
+		},
+	}), searchH.Search)
 
 	api.Post("/connections", connH.CreateConnection)
 	api.Get("/connections", connH.ListConnections)
@@ -203,8 +228,14 @@ func main() {
 	<-quit
 	logger.Info("shutting down server — waiting for goroutines")
 
-	// Wait for embedding + LLM goroutines to finish
-	wg.Wait()
+	// Wait for embedding + LLM goroutines to finish (30s max to avoid blocking rollouts)
+	waitDone := make(chan struct{})
+	go func() { wg.Wait(); close(waitDone) }()
+	select {
+	case <-waitDone:
+	case <-time.After(30 * time.Second):
+		logger.Warn("shutdown: timed out waiting for background goroutines")
+	}
 
 	// Close WebSocket hub (sends close frames, waits for handler goroutines)
 	hub.Stop()

@@ -10,7 +10,7 @@
   <% if (it.matches.length >= (it.limit ?? 20)) { %>
     <div class="col-12 text-center mt-3">
       <button class="btn btn-outline-primary"
-              hx-get="/discover/matches?category=<%= it.category ?? '' %>&offset=<%= (it.offset ?? 0) + it.matches.length %>"
+              hx-get="/discover/matches?category=<%= it.category || "" %>&offset=<%= (it.offset || 0) + it.matches.length %>"
               hx-target="#match-list"
               hx-swap="innerHTML">
         Load more

@@ -52,15 +52,18 @@ func (h *ConnectionHandler) CreateConnection(c fiber.Ctx) error {
 		return model.NewAppError(model.ErrValidation, "cannot connect with yourself")
 	}
 
-	// Check for existing connection in either direction
+	// Check for existing connection in either direction (fail closed on DB error)
 	var exists bool
-	_ = h.pool.QueryRow(c.Context(),
+	if err := h.pool.QueryRow(c.Context(),
 		`SELECT EXISTS (
 		   SELECT 1 FROM connections
 		   WHERE (requester_id=$1 AND recipient_id=$2)
 		      OR (requester_id=$2 AND recipient_id=$1)
 		 )`, userID, recipientID,
-	).Scan(&exists)
+	).Scan(&exists); err != nil {
+		h.logger.Error("check connection exists", "error", err)
+		return model.NewAppError(model.ErrInternal, "failed to check connection status")
+	}
 	if exists {
 		return model.NewAppError(model.ErrConflict, "connection already exists")
 	}

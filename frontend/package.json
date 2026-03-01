@@ -13,6 +13,7 @@
     "eta": "^3.5.0",
     "firebase": "^11.0.0",
     "hono": "^4.7.4",
+    "htmx.org": "^2.0.8",
     "jose": "^5.0.0"
   },
   "devDependencies": {
