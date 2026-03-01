@@ -12,10 +12,10 @@
 | 1 | Authentication | ✅ Complete | `phase/1-auth` | 2026-03-01 |
 | 2 | Onboarding & Profiles | ✅ Complete | `phase/2-profiles` | 2026-03-01 |
 | 3 | CV Import | ✅ Complete | `phase/3-cv-import` | 2026-03-01 |
-| 4 | Match Discovery | ⬜ Not Started | `phase/4-matches` | — |
-| 5 | AI Search & Explanations | ⬜ Not Started | `phase/5-ai-search` | — |
-| 6 | Connections | ⬜ Not Started | `phase/6-connections` | — |
-| 7 | Real-Time Messaging | ⬜ Not Started | `phase/7-messaging` | — |
+| 4 | Match Discovery | ✅ Complete | `phase/4-matches` | 2026-03-01 |
+| 5 | AI Search & Explanations | ✅ Complete | `phase/5-ai-search` | 2026-03-01 |
+| 6 | Connections | ✅ Complete | `phase/6-connections` | 2026-03-01 |
+| 7 | Real-Time Messaging | ✅ Complete | `phase/7-messaging` | 2026-03-01 |
 | 8 | Privacy & Safety | ⬜ Not Started | `phase/8-privacy` | — |
 | 9 | Polish & Hardening | ⬜ Not Started | `phase/9-polish` | — |
 | 10 | GCP Deployment | ⬜ Not Started | `phase/10-deploy` | — |
@@ -155,6 +155,142 @@ GET  localhost:3000/login                 →  [x] pass — 200
 GET  localhost:3000/dashboard (no auth)  →  [x] pass — 302 redirect
 CV import with real PDF URL              →  [ ] pending (requires auth token)
 ```
+
+---
+
+## Phase 6 — Connections
+
+**Goal**: Users can send, accept, and reject connection requests. Profile pages show correct action button.
+
+**Completed**: 2026-03-01
+
+### Checklist
+- [x] Go: `handler/connections.go` — POST /api/v1/connections (409 on duplicate), GET /api/v1/connections?status=, PATCH /api/v1/connections/:id (recipient-only), GET /api/v1/connections/status/:userId
+- [x] Go: main.go — all 4 connection routes wired
+- [x] BFF: `routes/connections.ts` — page, HTMX list partial, request/accept/reject
+- [x] UI: `pages/connections.eta` — accepted/pending tab switcher (HTMX)
+- [x] UI: `partials/connection-list.eta` — direction-aware action buttons
+- [x] UI: `pages/profile.eta` — Connect/Pending/Accept/Message button based on connection status
+- [x] UI: `partials/match-card.eta` — Connect button with HTMX "Pending" swap
+- [x] BFF: `routes/pages.ts` — profile page fetches connection status in parallel
+
+### Test Results
+```
+go build ./...                                         →  [x] pass
+go vet ./...                                           →  [x] pass
+bun typecheck                                          →  [x] pass
+POST /api/v1/connections (send request)                →  [ ] pending (requires live server)
+POST /api/v1/connections (duplicate)                   →  [ ] pending (409 CONFLICT check)
+PATCH /api/v1/connections/:id (accept)                 →  [ ] pending (requires auth)
+PATCH /api/v1/connections/:id (non-recipient attempt)  →  [ ] pending (403 check)
+GET  /api/v1/connections/status/:userId                →  [ ] pending (requires auth)
+/connections page (accepted/pending tabs)              →  [ ] pending (requires local Supabase)
+Profile page Connect button states                     →  [ ] pending (requires data)
+```
+
+---
+
+## Phase 5 — AI Search & Explanations
+
+**Goal**: Natural language search returns relevant results. On-demand AI explanations generated for matches.
+
+**Completed**: 2026-03-01
+
+### Checklist
+- [x] Go: `service/llm/search.go` — NLSearchParser (llama-3.1-8b-instant, JSON mode, 5s timeout)
+- [x] Go: `service/llm/explain.go` — MatchExplainer (llama-3.3-70b-versatile, JSON mode, 10s timeout)
+- [x] Go: `handler/search.go` — POST /api/v1/search full flow (NL → embed → pgvector → results)
+- [x] Go: `handler/matches.go` — GET /api/v1/matches/:matchedUserId/explanation with cache-first logic
+- [x] Go: `service/matching.go` — GetExplanation: profile fetch + Groq call on cache miss + persist
+- [x] BFF: `routes/discover.ts` — POST /discover/search (NL search HTMX endpoint)
+- [x] BFF: `routes/discover.ts` — GET /discover/matches/:id/explanation (explanation lazy-load)
+- [x] UI: `pages/discover.eta` — NL search bar with 500ms HTMX debounce + spinner
+- [x] UI: `partials/search-results.eta` — search result cards with score, skills, profile link
+- [x] UI: `partials/match-card.eta` — "Why this match?" button (HTMX once, inline text)
+
+### Test Results
+```
+go build ./...                                        →  [x] pass
+go vet ./...                                          →  [x] pass
+bun typecheck                                         →  [x] pass
+POST /api/v1/search (no auth)                         →  [ ] pending (requires live server)
+GET  /api/v1/matches/:id/explanation (first call)     →  [ ] pending (requires auth + data)
+GET  /api/v1/matches/:id/explanation (second call)    →  [ ] pending (requires auth + data)
+/discover search bar → results grid                   →  [ ] pending (requires local Supabase)
+"Why this match?" button → inline explanation          →  [ ] pending (requires data)
+```
+
+---
+
+## Phase 4 — Match Discovery
+
+**Goal**: Two users with different profiles see each other on the Discover page ranked by similarity.
+
+**Completed**: 2026-03-01
+
+### Checklist
+- [x] Go: `service/matching.go` — MatchService, cache computation, category algorithm (§9.3)
+- [x] Go: `GET /api/v1/matches`, `POST /api/v1/matches/:matchedUserId/dismiss`
+- [x] Go: `POST /internal/matches/refresh` (X-Internal-Secret secured)
+- [x] Go: `middleware/internal.go` — RequireInternal middleware
+- [x] Go: Match cache triggered after embedding completes (profiles + onboarding handlers)
+- [x] BFF: `routes/discover.ts` — GET /discover, GET /discover/matches (HTMX), POST /discover/matches/:id/dismiss
+- [x] UI: `pages/discover.eta` — discover page with category tabs + HTMX match grid
+- [x] UI: `partials/match-card.eta` — match card with dismiss button
+- [x] UI: `partials/match-list.eta` — match list partial with empty state + load-more
+
+### Test Results
+```
+go build ./...                               →  [x] pass
+go vet ./...                                 →  [x] pass
+bun typecheck                                →  [x] pass
+GET  /api/v1/matches (no auth)               →  [ ] pending (requires live server)
+POST /api/v1/matches/:id/dismiss (no auth)   →  [ ] pending (requires live server)
+POST /internal/matches/refresh (no secret)   →  [ ] pending (requires live server)
+GET  /discover (authenticated)               →  [ ] pending (requires local Supabase)
+Category filter cofounder tab                →  [ ] pending (requires DB data)
+Dismiss button removes card from UI          →  [ ] pending (requires DB data)
+```
+
+---
+
+## Phase 7 — Real-Time Messaging
+
+**Goal**: Accepted connections can exchange real-time messages. History persists. Two tabs see each other's messages live.
+
+**Completed**: 2026-03-01
+
+### Checklist
+- [x] Go: `internal/ws/hub.go` — Hub (rooms map + RWMutex, per-connection write mutex, validateToken injection, Stop())
+- [x] Go: `hub.Upgrade()` — FastHTTP upgrader; first-message auth (10s deadline), join_room, message with all guards
+- [x] Go: `handler/conversations.go` — POST/GET /api/v1/conversations, GET /api/v1/conversations/:id/messages, PATCH /:id/read
+- [x] Go: `main.go` — wired convH, hub, GET /ws route, hub.Stop() in shutdown
+- [x] Go: `go get github.com/fasthttp/websocket` — WS library (Fiber v3 compatible via FastHTTPUpgrader)
+- [x] BFF: `routes/messages.ts` — GET /messages, GET /messages/new?userId=, GET /messages/:convId, GET /messages/partials/ws-token
+- [x] BFF: `routes/pages.ts` — mounted messageRoutes at /messages
+- [x] UI: `pages/messages.eta` — conversation sidebar + chat area + Alpine chat store
+- [x] UI: Alpine chat store — connect/auth/join/send/receive/reconnect with exponential backoff
+
+### Test Results
+```
+go build ./...                                              →  [x] pass
+go vet ./...                                                →  [x] pass
+bun typecheck                                               →  [x] pass
+GET  /ws (no auth token in first message)                   →  [ ] pending (requires live server)
+POST /api/v1/conversations (no accepted connection)         →  [ ] pending (403 check)
+POST /api/v1/conversations (accepted connection)            →  [ ] pending (creates conv)
+GET  /api/v1/conversations/:id/messages (cursor)            →  [ ] pending (requires data)
+WS: auth → join_room → message → new_message broadcast      →  [ ] pending (requires two sessions)
+WS message > 4000 chars                                     →  [ ] pending (error response check)
+/messages page (two tabs, live message delivery)            →  [ ] pending (requires local Supabase)
+Reconnect with fresh WS token after disconnect              →  [ ] pending (requires live server)
+```
+
+### Notes
+- `gofiber/contrib/websocket` v1.3.4 targets Fiber v2 (incompatible); used `github.com/fasthttp/websocket` directly with `FastHTTPUpgrader` + Fiber v3's `c.RequestCtx()`
+- WS auth is first-message (`{type:"auth",token}`) not header-based, keeping `/ws` outside JWT middleware
+- BFF derives WS URL from `GO_API_URL` by replacing `http:` → `ws:` / `https:` → `wss:`
+- `window.__CHAT__` pattern avoids double-escaping of JSON in Eta templates
 
 ---
 

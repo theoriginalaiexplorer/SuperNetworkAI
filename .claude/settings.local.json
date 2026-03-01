@@ -9,7 +9,19 @@
       "Bash(\"/c/Users/ameyj/.bun/bin/bun\" install:*)",
       "Bash(\"/c/Users/ameyj/.bun/bin/bun\" run:*)",
       "Bash(\"/c/Program Files/Go/bin/go\" get:*)",
-      "Bash(\"/c/Program Files/Go/bin/go\" list:*)"
+      "Bash(\"/c/Program Files/Go/bin/go\" list:*)",
+      "Bash(curl:*)",
+      "Bash(\"/c/Program Files/Go/bin/go\" version:*)",
+      "Bash(python3:*)",
+      "Bash(\"/c/Program Files/Go/bin/go\":*)",
+      "Bash(/c/Users/ameyj/.bun/bin/bun:*)",
+      "Bash(xargs sed:*)",
+      "Bash(\"/c/Program Files/Go/bin/go\" test:*)",
+      "Bash(go build:*)",
+      "Bash(go vet:*)",
+      "Bash(go get:*)",
+      "Bash(sed:*)",
+      "Bash(bun run:*)"
     ]
   }
 }

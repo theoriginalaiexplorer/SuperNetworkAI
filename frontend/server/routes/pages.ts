@@ -5,6 +5,9 @@ import { sessionMiddleware } from "../middleware/session";
 import { renderPartial } from "../lib/render";
 import { apiClient } from "../lib/api";
 import { onboardingRoutes } from "./onboarding";
+import { discoverRoutes } from "./discover";
+import { connectionRoutes } from "./connections";
+import { messageRoutes } from "./messages";
 
 export const pageRoutes = new Hono<{ Variables: Variables }>();
 
@@ -55,9 +58,22 @@ authenticated.get("/profile/me", async (c) => {
 authenticated.get("/profile/:id", async (c) => {
   const session = c.get("session") as { accessToken: string };
   const api = apiClient(session.accessToken);
+  const id = c.req.param("id");
   try {
-    const profile = await api.get<object>(`/api/v1/users/${c.req.param("id")}`);
-    return renderPartial(c, "pages/profile", { profile, isOwn: false });
+    type ConnStatus = { status: string; connection_id?: string; direction?: string };
+    const [profileData, connStatus] = await Promise.all([
+      api.get<object>(`/api/v1/users/${id}`),
+      api
+        .get<ConnStatus>(`/api/v1/connections/status/${id}`)
+        .catch((): ConnStatus => ({ status: "none" })),
+    ]);
+    return renderPartial(c, "pages/profile", {
+      profile: profileData,
+      isOwn: false,
+      connectionStatus: connStatus.status,
+      connectionId: connStatus.connection_id ?? null,
+      connectionDirection: connStatus.direction ?? null,
+    });
   } catch (e: any) {
     if (e.status === 403) return c.text("Access denied", 403);
     if (e.status === 404) return c.text("Not found", 404);
@@ -67,5 +83,14 @@ authenticated.get("/profile/:id", async (c) => {
 
 // Onboarding steps (no onboarding guard — that would cause redirect loop)
 pageRoutes.route("/onboarding", onboardingRoutes);
+
+// Discover (match browsing) — auth handled inside discoverRoutes
+pageRoutes.route("/discover", discoverRoutes);
+
+// Connections — auth handled inside connectionRoutes
+pageRoutes.route("/connections", connectionRoutes);
+
+// Messages + WebSocket token — auth handled inside messageRoutes
+pageRoutes.route("/messages", messageRoutes);
 
 pageRoutes.route("/", authenticated);

@@ -28,8 +28,10 @@ import (
 	"supernetwork/backend/internal/health"
 	"supernetwork/backend/internal/middleware"
 	"supernetwork/backend/internal/model"
+	"supernetwork/backend/internal/service"
 	"supernetwork/backend/internal/service/embedding"
 	"supernetwork/backend/internal/service/llm"
+	"supernetwork/backend/internal/ws"
 )
 
 func main() {
@@ -61,6 +63,8 @@ func main() {
 	// --- LLM services ---
 	ikigaiSummariser := llm.NewIkigaiSummariser(cfg.GroqAPIKey)
 	cvStructurer := llm.NewCVStructurer(cfg.GroqAPIKey)
+	nlSearchParser := llm.NewNLSearchParser(cfg.GroqAPIKey)
+	matchExplainer := llm.NewMatchExplainer(cfg.GroqAPIKey)
 
 	// --- WaitGroup for goroutine tracking (graceful shutdown) ---
 	var wg sync.WaitGroup
@@ -97,11 +101,23 @@ func main() {
 	// --- JWKS URL for auth middleware ---
 	jwksURL := fmt.Sprintf("%s/auth/v1/.well-known/jwks.json", cfg.SupabaseURL)
 
+	// --- Services ---
+	matchSvc := service.NewMatchService(pool, matchExplainer, logger)
+
 	// --- Handlers ---
 	authH := handler.NewAuthHandler(cfg.WSTokenSecret)
 	userH := handler.NewUserHandler(pool, logger)
-	profileH := handler.NewProfileHandler(pool, embedProvider, &wg, logger)
-	onboardingH := handler.NewOnboardingHandler(pool, embedProvider, ikigaiSummariser, cvStructurer, &wg, logger)
+	profileH := handler.NewProfileHandler(pool, embedProvider, matchSvc, &wg, logger)
+	onboardingH := handler.NewOnboardingHandler(pool, embedProvider, ikigaiSummariser, cvStructurer, matchSvc, &wg, logger)
+	matchH := handler.NewMatchHandler(matchSvc, logger)
+	searchH := handler.NewSearchHandler(pool, nlSearchParser, embedProvider, logger)
+	connH := handler.NewConnectionHandler(pool, logger)
+	internalH := handler.NewInternalHandler(pool, matchSvc, &wg, logger)
+	convH := handler.NewConversationHandler(pool, logger)
+
+	// --- WebSocket hub ---
+	authHRef := authH // capture for closure
+	hub := ws.NewHub(pool, authHRef.ValidateWSToken, logger)
 
 	// --- API v1 routes (all require JWT) ---
 	api := app.Group("/api/v1", middleware.RequireAuth(jwksURL))
@@ -117,6 +133,31 @@ func main() {
 	api.Post("/onboarding/ikigai", onboardingH.SaveIkigai)
 	api.Post("/onboarding/complete", onboardingH.CompleteOnboarding)
 	api.Post("/onboarding/import-cv", onboardingH.ImportCV)
+
+	api.Get("/matches", matchH.GetMatches)
+	api.Post("/matches/:matchedUserId/dismiss", matchH.DismissMatch)
+	api.Get("/matches/:matchedUserId/explanation", matchH.GetExplanation)
+
+	api.Post("/search", searchH.Search)
+
+	api.Post("/connections", connH.CreateConnection)
+	api.Get("/connections", connH.ListConnections)
+	api.Get("/connections/status/:userId", connH.GetStatus)
+	api.Patch("/connections/:id", connH.UpdateConnection)
+
+	api.Post("/conversations", convH.CreateConversation)
+	api.Get("/conversations", convH.ListConversations)
+	api.Get("/conversations/:id/messages", convH.GetMessages)
+	api.Patch("/conversations/:id/read", convH.MarkRead)
+
+	// --- WebSocket (auth via first-message token, not JWT) ---
+	app.Get("/ws", func(c fiber.Ctx) error {
+		return hub.Upgrade(c.RequestCtx())
+	})
+
+	// --- Internal routes (Cloud Scheduler / cron) ---
+	internal := app.Group("/internal", middleware.RequireInternal(cfg.InternalAPISecret))
+	internal.Post("/matches/refresh", internalH.RefreshMatches)
 
 	// --- Graceful shutdown ---
 	quit := make(chan os.Signal, 1)
@@ -136,6 +177,9 @@ func main() {
 
 	// Wait for embedding + LLM goroutines to finish
 	wg.Wait()
+
+	// Close WebSocket hub (sends close frames, waits for handler goroutines)
+	hub.Stop()
 
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer shutdownCancel()

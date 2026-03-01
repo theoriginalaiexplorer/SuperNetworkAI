@@ -11,6 +11,116 @@ Format: each entry lists what was added, what was changed, and what the phase ta
 
 ---
 
+## [phase/7-messaging] — 2026-03-01
+
+### Added
+- `backend/internal/ws/hub.go` — WebSocket Hub using `github.com/fasthttp/websocket` (Fiber v3 compatible via `FastHTTPUpgrader`); rooms map + `sync.RWMutex`; per-connection write mutex; first-message auth (10s deadline); join_room/leave_room/message dispatch; all messaging guards (membership, accepted connection, blocks); `hub.Stop()` for graceful shutdown
+- `backend/internal/handler/conversations.go` — `POST /api/v1/conversations` (idempotent: returns existing or creates new, requires accepted connection); `GET /api/v1/conversations` (with last-message preview + unread count); `GET /api/v1/conversations/:id/messages` (cursor pagination: `?before=`, `?after=`, default newest-50); `PATCH /api/v1/conversations/:id/read`
+- `frontend/server/routes/messages.ts` — `GET /messages`, `GET /messages/new?userId=`, `GET /messages/:convId`, `GET /messages/partials/ws-token` (fresh WS token for reconnect)
+- `frontend/server/templates/pages/messages.eta` — conversation list sidebar + chat area; Alpine chat store with connect/auth/join/send/receive/reconnect (exponential backoff: 1s→2s→4s→…→30s); `window.__CHAT__` pattern for safe server-to-Alpine data handoff
+
+### Changed
+- `backend/go.mod` — added `github.com/fasthttp/websocket v1.5.12` as direct dependency (removed unused `gofiber/contrib/websocket` which targets Fiber v2)
+- `backend/main.go` — wired `convH`, `hub`; added conversation routes; added `GET /ws` WebSocket route using `c.RequestCtx()` (Fiber v3 API); added `hub.Stop()` before server shutdown
+- `frontend/server/routes/pages.ts` — mounts `messageRoutes` at `/messages`
+
+### Test criteria passed
+- [x] `go build ./...` — no errors
+- [x] `go vet ./...` — no warnings
+- [x] `bun typecheck` — no errors
+- [ ] `GET /ws` → first message auth succeeds (blocked: requires live server)
+- [ ] `POST /api/v1/conversations` without accepted connection → 403 (blocked: live server)
+- [ ] Two users send messages in real time via WS (blocked: local Supabase)
+- [ ] WS message >4000 chars → error response (blocked: live server)
+- [ ] Reconnect after disconnect → fresh token fetched, messages resumed (blocked: live server)
+
+---
+
+## [phase/6-connections] — 2026-03-01
+
+### Added
+- `backend/internal/handler/connections.go` — `POST /api/v1/connections` (bidirectional duplicate check → 409), `GET /api/v1/connections?status=`, `PATCH /api/v1/connections/:id` (recipient-only accept/reject), `GET /api/v1/connections/status/:userId`
+- `frontend/server/routes/connections.ts` — full connections BFF: page, HTMX list partial, request/accept/reject actions
+- `frontend/server/templates/pages/connections.eta` — connections page with accepted/pending tab switcher (HTMX, no Bootstrap JS)
+- `frontend/server/templates/partials/connection-list.eta` — connection cards with direction-aware action buttons (Accept/Reject for received, "Request sent" badge for sent)
+
+### Changed
+- `backend/main.go` — wired `connH`; added `/connections`, `/connections/status/:userId`, `/connections/:id` routes
+- `frontend/server/routes/pages.ts` — profile page now fetches connection status in parallel with profile data; passes `connectionStatus`, `connectionId`, `connectionDirection` to template; mounts `connectionRoutes` at `/connections`
+- `frontend/server/templates/pages/profile.eta` — shows Connect / Pending / Accept request / Message button depending on connection status
+- `frontend/server/templates/partials/match-card.eta` — added "Connect" button with HTMX swap to "Pending…" on click
+- `frontend/server/templates/pages/dashboard.eta` — reordered nav: Discover → Connections → Messages
+
+### Test criteria passed
+- [x] `go build ./...` — no errors
+- [x] `go vet ./...` — no warnings
+- [x] `bun typecheck` — no errors
+- [ ] User A sends connection to User B → User B sees pending request (blocked: local Supabase)
+- [ ] User B accepts → status = 'accepted' for both (blocked: requires auth + data)
+- [ ] User B rejects → status = 'rejected' (blocked: requires auth + data)
+- [ ] `GET /connections/status/:userId` → correct status (blocked: requires auth)
+- [ ] Profile page shows correct button per connection state (blocked: requires auth)
+- [ ] Duplicate connection request → 409 CONFLICT (blocked: requires auth)
+
+---
+
+## [phase/5-ai-search] — 2026-03-01
+
+### Added
+- `backend/internal/service/llm/search.go` — `NLSearchParser.ParseSearchQuery()`: Groq `llama-3.1-8b-instant` (JSON mode, 5s timeout) parses free-text query into `{ embedding_text, intent_filter, availability_filter }`
+- `backend/internal/service/llm/explain.go` — `MatchExplainer.ExplainMatch()`: Groq `llama-3.3-70b-versatile` (JSON mode, 10s timeout) generates 2-3 sentence match explanation from two profile snapshots
+- `backend/internal/handler/search.go` — `POST /api/v1/search`: NL parse → embed → pgvector search (visibility + block guards) → ranked results
+- `backend/internal/handler/matches.go` — `GET /api/v1/matches/:matchedUserId/explanation`: check match_cache; call Groq on first request; cache result; return on subsequent calls
+- `frontend/server/routes/discover.ts` — `GET /discover/matches/:id/explanation` (HTMX lazy-load), `POST /discover/search` (NL search HTMX endpoint; empty query restores match list)
+- `frontend/server/templates/partials/search-results.eta` — search result cards grid with avatar, score, intent badges, skills, profile link
+- `frontend/server/templates/pages/discover.eta` — NL search bar with 500ms HTMX debounce + `htmx-indicator` spinner
+- `frontend/server/templates/partials/match-card.eta` — "Why this match?" lazy-load button (HTMX `hx-trigger="click once"`, inline explanation text)
+
+### Changed
+- `backend/internal/service/matching.go` — `matchService` gains `explainer MatchExplainer` field; `GetExplanation` now fetches both profiles and calls Groq on cache miss, then persists result
+- `backend/main.go` — wired `nlSearchParser`, `matchExplainer`, `searchH`; `NewMatchService` now accepts explainer; added `GET /api/v1/matches/:id/explanation` and `POST /api/v1/search` routes
+
+### Test criteria passed
+- [x] `go build ./...` — no errors
+- [x] `go vet ./...` — no warnings
+- [x] `bun typecheck` — no errors
+- [ ] `POST /api/v1/search {"query":"React dev"}` → ranked profiles (blocked: local Supabase setup pending)
+- [ ] `GET /api/v1/matches/:id/explanation` first call → Groq generates + caches (blocked: requires auth + data)
+- [ ] Second call to explanation → returns cached (no new Groq call) (blocked: requires auth + data)
+- [ ] Search with no results → "No results found" empty state
+
+---
+
+## [phase/4-matches] — 2026-03-01
+
+### Added
+- `backend/internal/service/matching.go` — `matchService`: `GetMatches` (pgvector cosine similarity with block exclusion + category filter), `DismissMatch`, `GetExplanation`, `RefreshCacheForUser` (upsert preserving dismissed state + explanation)
+- `backend/internal/handler/matches.go` — `GET /api/v1/matches` (ranked, filtered, paginated) + `POST /api/v1/matches/:matchedUserId/dismiss`
+- `backend/internal/handler/internal.go` — `POST /internal/matches/refresh`: batch-refreshes match_cache for all users with stale caches; secured by `X-Internal-Secret` header
+- `backend/internal/middleware/internal.go` — `RequireInternal()` middleware for Cloud Scheduler routes
+- `frontend/server/routes/discover.ts` — `GET /discover`, `GET /discover/matches` (HTMX partial), `POST /discover/matches/:id/dismiss`
+- `frontend/server/templates/pages/discover.eta` — Discover page with Bootstrap category tabs and HTMX match grid
+- `frontend/server/templates/partials/match-card.eta` — Match card: avatar, name, match %, categories, skills, View/Dismiss
+- `frontend/server/templates/partials/match-list.eta` — Match list partial (HTMX swap target); empty state + load-more
+
+### Changed
+- `backend/internal/service/interfaces.go` — `MatchService` interface: added `DismissMatch`; `Match` struct expanded with profile snapshot fields (`DisplayName`, `Tagline`, `Skills`, `Intent`, `AvatarURL`)
+- `backend/internal/handler/profiles.go` — `ProfileHandler` gains `matchSvc` field; triggers `RefreshCacheForUser` after embedding update
+- `backend/internal/handler/onboarding.go` — `OnboardingHandler` gains `matchSvc` field; triggers `RefreshCacheForUser` after ikigai embedding
+- `backend/main.go` — wired `matchSvc`, `matchH`, `internalH`; updated `profileH` + `onboardingH` constructors; added match + internal routes
+- `frontend/server/routes/pages.ts` — mounted `discoverRoutes` at `/discover`
+
+### Test criteria passed
+- [x] `go build ./...` — no errors
+- [x] `go vet ./...` — no warnings
+- [x] `bun typecheck` — no errors
+- [ ] End-to-end: User A visits /discover → User B in results (blocked: local Supabase setup pending)
+- [ ] Category filter "cofounder" → only cofounder matches (blocked: requires DB data)
+- [ ] `POST /api/v1/matches/:id/dismiss` → match disappears (blocked: requires auth)
+- [ ] `POST /internal/matches/refresh` → recomputes cache (blocked: requires DB)
+
+---
+
 ## [phase/3-cv-import] — 2026-03-01
 
 ### Added
