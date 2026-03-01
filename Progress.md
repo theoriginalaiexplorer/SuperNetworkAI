@@ -9,7 +9,7 @@
 | # | Phase | Status | Tag | Date |
 |---|---|---|---|---|
 | 0 | Foundation | ✅ Complete | `phase/0-foundation` | 2026-03-01 |
-| 1 | Authentication | ⬜ Not Started | `phase/1-auth` | — |
+| 1 | Authentication | ✅ Complete | `phase/1-auth` | 2026-03-01 |
 | 2 | Onboarding & Profiles | ⬜ Not Started | `phase/2-profiles` | — |
 | 3 | CV Import | ⬜ Not Started | `phase/3-cv-import` | — |
 | 4 | Match Discovery | ⬜ Not Started | `phase/4-matches` | — |
@@ -68,7 +68,36 @@ make migrate-up              →  [ ] pending (requires Supabase creds)
 ---
 
 ## Phase 1 — Authentication
-**Blocked by**: Phase 0 test criteria (live healthz endpoints)
+
+**Goal**: Users can sign up, log in, see an empty dashboard, and log out. Session cookies work. Onboarding guard redirects incomplete users.
+
+**Completed**: 2026-03-01
+
+### Checklist
+- [x] Go: `POST /api/v1/auth/ws-token` endpoint (HMAC-SHA256, 60s TTL, single-use)
+- [x] Go: JWT auth middleware on all `/api/v1/*` routes (JWKS 30min cache)
+- [x] Go: Swagger UI at `/swagger` + spec at `/swagger/doc.json`
+- [x] BFF: `server/middleware/session.ts` — cookie read/write + mutex refresh guard
+- [x] BFF: `server/middleware/auth.ts` — requireAuth + silent refresh
+- [x] BFF: `server/routes/auth.ts` — login, logout, signup, confirm
+- [x] BFF: `server/routes/pages.ts` — page routes with onboarding guard
+- [x] UI: Base layout (Bootstrap 5 CSS, HTMX, Alpine + morph CDN)
+- [x] UI: Landing, login, signup, dashboard pages
+- [x] UI: Onboarding step 1 placeholder template
+
+### Test Results
+```
+go build ./...               →  [x] pass
+bun typecheck                →  [x] pass
+POST /auth/login             →  [ ] pending (requires live Supabase)
+GET /dashboard (no cookie)   →  [ ] pending (requires live server)
+POST /api/v1/auth/ws-token   →  [ ] pending (requires live server)
+```
+
+---
+
+## Phase 2 — Onboarding & Profiles
+**Blocked by**: Phase 1
 
 ---
 

@@ -3,6 +3,9 @@
 // @description     Ikigai-based AI networking platform — Go REST + WebSocket backend
 // @host            localhost:3001
 // @BasePath        /
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
 
 package main
 
@@ -17,8 +20,10 @@ import (
 
 	"github.com/gofiber/fiber/v3"
 
+	_ "supernetwork/backend/docs"
 	"supernetwork/backend/internal/config"
 	"supernetwork/backend/internal/db"
+	"supernetwork/backend/internal/handler"
 	"supernetwork/backend/internal/health"
 	"supernetwork/backend/internal/middleware"
 	"supernetwork/backend/internal/model"
@@ -39,6 +44,9 @@ func main() {
 		os.Exit(1)
 	}
 	defer pool.Close()
+
+	// --- Background services ---
+	handler.StartTokenPurger()
 
 	// --- Fiber app ---
 	app := fiber.New(fiber.Config{
@@ -61,6 +69,22 @@ func main() {
 	h := health.New(pool)
 	app.Get("/healthz", h.Liveness)
 	app.Get("/readyz", h.Readiness)
+
+	// --- Swagger UI (CDN-hosted UI + spec from /swagger/doc.json) ---
+	app.Get("/swagger/doc.json", handler.SwaggerJSON)
+	app.Get("/swagger", handler.SwaggerUI)
+
+	// --- JWKS URL for auth middleware ---
+	jwksURL := fmt.Sprintf("%s/auth/v1/.well-known/jwks.json", cfg.SupabaseURL)
+
+	// --- Auth handler ---
+	authH := handler.NewAuthHandler(cfg.WSTokenSecret)
+
+	// --- API v1 routes (all require JWT) ---
+	api := app.Group("/api/v1", middleware.RequireAuth(jwksURL))
+
+	// Auth
+	api.Post("/auth/ws-token", authH.IssueWSToken)
 
 	// --- Graceful shutdown ---
 	quit := make(chan os.Signal, 1)

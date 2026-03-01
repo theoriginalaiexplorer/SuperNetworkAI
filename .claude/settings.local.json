@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "Bash(go mod:*)",
+      "Bash(\"/c/Program Files/Go/bin/go\" mod:*)",
+      "Bash(\"/c/Program Files/Go/bin/go\" build:*)",
+      "Bash(\"/c/Program Files/Go/bin/go\" doc:*)",
+      "Bash(\"/c/Users/ameyj/.bun/bin/bun\" install:*)",
+      "Bash(\"/c/Users/ameyj/.bun/bin/bun\" run:*)",
+      "Bash(\"/c/Program Files/Go/bin/go\" get:*)",
+      "Bash(\"/c/Program Files/Go/bin/go\" list:*)"
+    ]
+  }
+}

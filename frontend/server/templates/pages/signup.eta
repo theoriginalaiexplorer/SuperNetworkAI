@@ -1,0 +1,33 @@
+<% layout("layouts/base", { title: "Sign up — SuperNetworkAI" }) %>
+
+<div class="container d-flex justify-content-center align-items-center min-vh-100">
+  <div class="card shadow-sm" style="width: 100%; max-width: 420px;">
+    <div class="card-body p-4">
+      <h2 class="card-title mb-4 text-center fw-bold">Create your account</h2>
+
+      <div id="auth-error"></div>
+
+      <form
+        hx-post="/auth/signup"
+        hx-target="#auth-error"
+        hx-swap="outerHTML"
+      >
+        <div class="mb-3">
+          <label for="email" class="form-label">Email</label>
+          <input type="email" id="email" name="email" class="form-control" required autocomplete="email" />
+        </div>
+        <div class="mb-3">
+          <label for="password" class="form-label">Password</label>
+          <input type="password" id="password" name="password" class="form-control" required
+                 autocomplete="new-password" minlength="8" />
+          <div class="form-text">Minimum 8 characters</div>
+        </div>
+        <button type="submit" class="btn btn-primary w-100">Create account</button>
+      </form>
+
+      <p class="text-center mt-3 mb-0 text-muted small">
+        Already have an account? <a href="/login">Log in</a>
+      </p>
+    </div>
+  </div>
+</div>

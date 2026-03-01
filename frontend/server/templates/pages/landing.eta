@@ -1,0 +1,20 @@
+<% layout("layouts/base", { title: "SuperNetworkAI — Find Your People" }) %>
+
+<nav class="navbar navbar-expand-lg bg-body-tertiary">
+  <div class="container">
+    <a class="navbar-brand fw-bold" href="/">SuperNetworkAI</a>
+    <div class="ms-auto d-flex gap-2">
+      <a href="/login" class="btn btn-outline-primary btn-sm">Log in</a>
+      <a href="/signup" class="btn btn-primary btn-sm">Sign up</a>
+    </div>
+  </div>
+</nav>
+
+<main class="container py-5 text-center">
+  <h1 class="display-4 fw-bold mb-3">Find cofounders, teammates & clients<br/>who truly align with your Ikigai</h1>
+  <p class="lead text-muted mb-4">
+    AI-powered matching based on what you love, what you're good at,<br/>
+    what the world needs, and what you can be paid for.
+  </p>
+  <a href="/signup" class="btn btn-primary btn-lg px-5">Get started — it's free</a>
+</main>
