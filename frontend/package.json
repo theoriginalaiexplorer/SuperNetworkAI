@@ -16,6 +16,7 @@
     "jose": "^5.0.0"
   },
   "devDependencies": {
+    "@types/alpinejs": "^3.13.11",
     "@types/bun": "latest",
     "@typescript-eslint/eslint-plugin": "^8.26.1",
     "@typescript-eslint/parser": "^8.26.1",

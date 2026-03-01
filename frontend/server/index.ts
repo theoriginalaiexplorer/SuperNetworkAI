@@ -19,16 +19,6 @@ app.route("/", pageRoutes);
 app.route("/error", errorRoutes);
 
 export default {
-  port: PORT,
-  fetch: app.fetch,
-};
-
-// Error pages (404, 500, etc.)
-app.route("/error", errorRoutes);
-
-const PORT = Number(process.env.PORT ?? 3000);
-
-export default {
-  port: PORT,
+  port: Number(process.env.PORT ?? 3000),
   fetch: app.fetch,
 };

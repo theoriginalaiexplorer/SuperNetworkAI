@@ -1,0 +1,23 @@
+import { defineConfig } from "vite";
+import { resolve } from "path";
+
+// Builds client-side assets → dist/public/
+export default defineConfig({
+  root: "client",
+  build: {
+    target: "esnext",
+    input: {
+      main: resolve(__dirname, "client/main.ts"),
+    },
+    outDir: "../dist/public",
+    emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        entryFileNames: "[name].js",
+        assetFileNames: "[name].[ext]",
+        manualChunks: {
+          vendor: ["alpinejs"]
+        }
+      }
+    }
+});

@@ -11,6 +11,7 @@
         "jose": "^5.0.0",
       },
       "devDependencies": {
+        "@types/alpinejs": "^3.13.11",
         "@types/bun": "latest",
         "@typescript-eslint/eslint-plugin": "^8.26.1",
         "@typescript-eslint/parser": "^8.26.1",
@@ -260,6 +261,8 @@
     "@rollup/rollup-win32-x64-gnu": ["@rollup/rollup-win32-x64-gnu@4.59.0", "", { "os": "win32", "cpu": "x64" }, "sha512-laBkYlSS1n2L8fSo1thDNGrCTQMmxjYY5G0WFWjFFYZkKPjsMBsgJfGf4TLxXrF6RyhI60L8TMOjBMvXiTcxeA=="],
 
     "@rollup/rollup-win32-x64-msvc": ["@rollup/rollup-win32-x64-msvc@4.59.0", "", { "os": "win32", "cpu": "x64" }, "sha512-2HRCml6OztYXyJXAvdDXPKcawukWY2GpR5/nxKp4iBgiO3wcoEGkAaqctIbZcNB6KlUQBIqt8VYkNSj2397EfA=="],
+
+    "@types/alpinejs": ["@types/alpinejs@3.13.11", "", {}, "sha512-3KhGkDixCPiLdL3Z/ok1GxHwLxEWqQOKJccgaQL01wc0EVM2tCTaqlC3NIedmxAXkVzt/V6VTM8qPgnOHKJ1MA=="],
 
     "@types/bun": ["@types/bun@1.3.9", "", { "dependencies": { "bun-types": "1.3.9" } }, "sha512-KQ571yULOdWJiMH+RIWIOZ7B2RXQGpL1YQrBtLIV3FqDcCu6FsbFUBwhdKUlCKUpS3PJDsHlJ1QKlpxoVR+xtw=="],
 
