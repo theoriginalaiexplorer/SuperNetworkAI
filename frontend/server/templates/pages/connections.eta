@@ -15,11 +15,11 @@
 <main class="container py-5">
   <h1 class="h3 mb-4">Connections</h1>
 
-  <% const tab = it.tab ?? 'accepted'; %>
+  <% const tab = it.tab ?? "accepted"; %>
 
   <!-- Tab switcher (HTMX, no Bootstrap JS needed) -->
   <div class="d-flex gap-2 mb-4 border-bottom pb-2">
-    <a class="btn btn-sm <%= tab === 'accepted' ? 'btn-primary' : 'btn-outline-secondary' %>"
+    <a class="btn btn-sm <%= tab === 'accepted' ? "btn-primary" : "btn-outline-secondary" %>"
        href="/connections?tab=accepted"
        hx-get="/connections/list?tab=accepted"
        hx-target="#connection-list"
@@ -27,7 +27,7 @@
        hx-push-url="/connections?tab=accepted">
       Accepted
     </a>
-    <a class="btn btn-sm <%= tab === 'pending' ? 'btn-primary' : 'btn-outline-secondary' %>"
+    <a class="btn btn-sm <%= tab === 'pending' ? "btn-primary" : "btn-outline-secondary" %>"
        href="/connections?tab=pending"
        hx-get="/connections/list?tab=pending"
        hx-target="#connection-list"
@@ -38,6 +38,6 @@
   </div>
 
   <div id="connection-list">
-    <%~ await include("../partials/connection-list", { connections: it.connections, tab }) %>
+    <%~ include("../partials/connection-list", { connections: it.connections, tab }) %>
   </div>
 </main>

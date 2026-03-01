@@ -68,7 +68,7 @@
 
   <!-- Match grid — HTMX target for search, category switches, and load-more -->
   <div class="row g-4" id="match-list">
-    <%~ await include("../partials/match-list", {
+    <%~ include("../partials/match-list", {
       matches: it.matches,
       category: currentCat,
       offset: 0,

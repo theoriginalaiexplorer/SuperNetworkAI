@@ -5,7 +5,7 @@
   </div>
 <% } else { %>
   <% for (const match of it.matches) { %>
-    <%~ await include("./match-card", { match }) %>
+    <%~ include("./match-card", { match }) %>
   <% } %>
   <% if (it.matches.length >= (it.limit ?? 20)) { %>
     <div class="col-12 text-center mt-3">

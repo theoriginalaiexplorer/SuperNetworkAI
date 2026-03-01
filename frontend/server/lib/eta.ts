@@ -6,4 +6,5 @@ export const eta = new Eta({
   views: join(import.meta.dir, "../templates"),
   cache: process.env.NODE_ENV === "production",
   autoEscape: true,
+  async: true,
 });

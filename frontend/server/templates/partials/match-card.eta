@@ -10,7 +10,7 @@
           <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center
                       text-white fw-bold flex-shrink-0"
                style="width:48px;height:48px;font-size:1.25rem;">
-            <%= (it.match.display_name?.[0] ?? '?').toUpperCase() %>
+            <%= (it.match.display_name?.[0] ?? "?").toUpperCase() %>
           </div>
         <% } %>
         <div class="flex-grow-1 overflow-hidden">
