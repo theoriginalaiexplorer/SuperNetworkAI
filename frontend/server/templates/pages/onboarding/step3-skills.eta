@@ -1,4 +1,4 @@
-<% layout("layouts/base", { title: "Onboarding — Skills & Interests" }) %>
+<% layout("../../layouts/base", { title: "Onboarding — Skills & Interests" }) %>
 
 <div class="container py-5" style="max-width: 600px;" x-data="{ skills: [], interests: [], newSkill: '', newInterest: '' }">
   <div class="mb-4">

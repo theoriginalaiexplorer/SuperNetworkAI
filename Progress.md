@@ -11,7 +11,7 @@
 | 0 | Foundation | ✅ Complete | `phase/0-foundation` | 2026-03-01 |
 | 1 | Authentication | ✅ Complete | `phase/1-auth` | 2026-03-01 |
 | 2 | Onboarding & Profiles | ✅ Complete | `phase/2-profiles` | 2026-03-01 |
-| 3 | CV Import | ⬜ Not Started | `phase/3-cv-import` | — |
+| 3 | CV Import | ✅ Complete | `phase/3-cv-import` | 2026-03-01 |
 | 4 | Match Discovery | ⬜ Not Started | `phase/4-matches` | — |
 | 5 | AI Search & Explanations | ⬜ Not Started | `phase/5-ai-search` | — |
 | 6 | Connections | ⬜ Not Started | `phase/6-connections` | — |
@@ -125,7 +125,36 @@ embedding_status → current        →  [ ] pending (requires Ollama)
 ---
 
 ## Phase 3 — CV Import
-**Blocked by**: Phase 2
+
+**Goal**: Users can paste a PDF URL to auto-fill social links during onboarding step 5. Backend downloads the PDF, extracts text, calls Groq LLM, and returns structured profile fields.
+
+**Completed**: 2026-03-01
+
+### Checklist
+- [x] Go: `service/downloader.go` — SSRF-safe PDF downloader (allowlist, 10s timeout, 5MB cap)
+- [x] Go: `service/pdf.go` — PDF text extraction via `ledongthuc/pdf`
+- [x] Go: `service/llm/cv.go` — CVStructurer via Groq `llama-3.3-70b-versatile` (JSON mode)
+- [x] Go: `handler/files.go` — Presign stub (Uploadthing Phase 3+)
+- [x] Go: `handler/onboarding.go` — `ImportCV` method added
+- [x] Go: `main.go` — `POST /api/v1/onboarding/import-cv` wired
+- [x] BFF: `routes/onboarding.ts` — `POST /onboarding/import-cv` proxy route
+- [x] UI: step5-links.eta — CV import card with Alpine.js pre-fill
+- [x] Fix: Eta layout paths corrected (`../layouts/base`, `../../layouts/base`)
+- [x] Fix: pdfcpu swapped for `ledongthuc/pdf` (correct API for text extraction)
+
+### Test Results
+```
+go build ./...                            →  [x] pass
+bun typecheck                             →  [x] pass
+POST /api/v1/onboarding/import-cv (401)  →  [x] pass (auth guard working)
+GET  localhost:3001/healthz               →  [x] pass
+GET  localhost:3001/readyz                →  [x] pass
+GET  localhost:3000/healthz               →  [x] pass
+GET  localhost:3000/ (landing)            →  [x] pass — 200
+GET  localhost:3000/login                 →  [x] pass — 200
+GET  localhost:3000/dashboard (no auth)  →  [x] pass — 302 redirect
+CV import with real PDF URL              →  [ ] pending (requires auth token)
+```
 
 ---
 

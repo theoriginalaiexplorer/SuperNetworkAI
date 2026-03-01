@@ -1,4 +1,4 @@
-<% layout("layouts/base", { title: "Log in — SuperNetworkAI" }) %>
+<% layout("../layouts/base", { title: "Log in — SuperNetworkAI" }) %>
 
 <div class="container d-flex justify-content-center align-items-center min-vh-100">
   <div class="card shadow-sm" style="width: 100%; max-width: 420px;">

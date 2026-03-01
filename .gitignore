@@ -30,3 +30,6 @@ Thumbs.db
 
 # Air (Go hot reload)
 backend/tmp/
+
+# Claude local settings (user-specific)
+.claude/settings.local.json

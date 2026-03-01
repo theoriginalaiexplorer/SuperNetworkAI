@@ -60,6 +60,7 @@ func main() {
 
 	// --- LLM services ---
 	ikigaiSummariser := llm.NewIkigaiSummariser(cfg.GroqAPIKey)
+	cvStructurer := llm.NewCVStructurer(cfg.GroqAPIKey)
 
 	// --- WaitGroup for goroutine tracking (graceful shutdown) ---
 	var wg sync.WaitGroup
@@ -100,7 +101,7 @@ func main() {
 	authH := handler.NewAuthHandler(cfg.WSTokenSecret)
 	userH := handler.NewUserHandler(pool, logger)
 	profileH := handler.NewProfileHandler(pool, embedProvider, &wg, logger)
-	onboardingH := handler.NewOnboardingHandler(pool, embedProvider, ikigaiSummariser, &wg, logger)
+	onboardingH := handler.NewOnboardingHandler(pool, embedProvider, ikigaiSummariser, cvStructurer, &wg, logger)
 
 	// --- API v1 routes (all require JWT) ---
 	api := app.Group("/api/v1", middleware.RequireAuth(jwksURL))
@@ -115,6 +116,7 @@ func main() {
 
 	api.Post("/onboarding/ikigai", onboardingH.SaveIkigai)
 	api.Post("/onboarding/complete", onboardingH.CompleteOnboarding)
+	api.Post("/onboarding/import-cv", onboardingH.ImportCV)
 
 	// --- Graceful shutdown ---
 	quit := make(chan os.Signal, 1)

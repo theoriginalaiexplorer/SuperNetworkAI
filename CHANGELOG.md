@@ -11,6 +11,37 @@ Format: each entry lists what was added, what was changed, and what the phase ta
 
 ---
 
+## [phase/3-cv-import] — 2026-03-01
+
+### Added
+- `backend/internal/service/downloader.go` — `DownloadPDF()`: SSRF-safe HTTP fetch (URL allowlist: uploadthing.com/utfs.io/ufs.sh/localhost, 10s timeout, 5MB cap, MIME check)
+- `backend/internal/service/pdf.go` — `ExtractPDFText()`: PDF-to-plaintext via `ledongthuc/pdf`
+- `backend/internal/service/llm/cv.go` — `CVStructurer.StructureCV()`: Groq `llama-3.3-70b-versatile` in JSON mode → `service.CVData`
+- `backend/internal/handler/files.go` — `POST /api/v1/files/presign` stub (Uploadthing Phase 3+ SDK integration pending)
+- `backend/internal/handler/onboarding.go` — `ImportCV` method: download → extract → LLM → JSON; wired to `POST /api/v1/onboarding/import-cv`
+- `frontend/server/routes/onboarding.ts` — `POST /onboarding/import-cv` BFF proxy route
+- `frontend/server/templates/pages/onboarding/step5-links.eta` — CV import card (Alpine.js fetch + DOM pre-fill for LinkedIn/GitHub/portfolio)
+
+### Changed
+- `backend/go.mod` — added `ledongthuc/pdf`, removed incorrect `pdfcpu` API usage
+- `backend/main.go` — wired `cvStructurer` and `POST /onboarding/import-cv` route
+- `backend/internal/handler/onboarding.go` — `OnboardingHandler` extended with `cvStructurer service.CVStructurer` field
+- `.gitignore` — added `.claude/settings.local.json`
+
+### Fixed
+- Eta template layout paths: `"layouts/base"` → `"../layouts/base"` (pages) and `"../../layouts/base"` (onboarding sub-dir) — fixes 500 on all page routes
+
+### Test criteria passed
+- [x] `go build ./...` — no errors
+- [x] `bun typecheck` — no errors
+- [x] `GET  /healthz`, `/readyz` — pass
+- [x] `GET  localhost:3000/`, `/login`, `/signup` — 200
+- [x] `GET  localhost:3000/dashboard` (unauthenticated) — 302
+- [x] `POST /api/v1/onboarding/import-cv` (no auth) — 401
+- [ ] End-to-end CV import with authenticated user (requires live auth token + hosted PDF)
+
+---
+
 ## [phase/2-profiles] — 2026-03-01
 
 ### Added

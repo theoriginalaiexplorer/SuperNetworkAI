@@ -78,6 +78,29 @@ onboardingRoutes.post("/step4", async (c) => {
   return renderPartial(c, "pages/onboarding/step5-links", {});
 });
 
+// CV import — calls Go API, returns structured CVData JSON for HTMX pre-fill
+onboardingRoutes.post("/import-cv", async (c) => {
+  const session = c.get("session") as { accessToken: string };
+  const body = await c.req.json<{ url: string }>();
+  const api = apiClient(session.accessToken);
+
+  try {
+    const cv = await api.post<{
+      display_name?: string;
+      bio?: string;
+      skills?: string[];
+      interests?: string[];
+      linkedin_url?: string;
+      github_url?: string;
+      portfolio_url?: string;
+    }>("/api/v1/onboarding/import-cv", { url: body.url });
+
+    return c.json(cv);
+  } catch (e: any) {
+    return c.json({ error: e.message ?? "CV import failed" }, 400);
+  }
+});
+
 // Step 5 — links (final step)
 onboardingRoutes.get("/step5", (c) => renderPartial(c, "pages/onboarding/step5-links", {}));
 

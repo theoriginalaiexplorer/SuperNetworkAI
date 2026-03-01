@@ -17,11 +17,12 @@ import (
 
 // OnboardingHandler handles /api/v1/onboarding/* routes.
 type OnboardingHandler struct {
-	pool      *pgxpool.Pool
-	embedder  service.EmbeddingProvider
-	summariser service.IkigaiSummariser
-	wg        *sync.WaitGroup
-	logger    *slog.Logger
+	pool         *pgxpool.Pool
+	embedder     service.EmbeddingProvider
+	summariser   service.IkigaiSummariser
+	cvStructurer service.CVStructurer
+	wg           *sync.WaitGroup
+	logger       *slog.Logger
 }
 
 // NewOnboardingHandler creates an OnboardingHandler.
@@ -29,10 +30,18 @@ func NewOnboardingHandler(
 	pool *pgxpool.Pool,
 	embedder service.EmbeddingProvider,
 	summariser service.IkigaiSummariser,
+	cvStructurer service.CVStructurer,
 	wg *sync.WaitGroup,
 	logger *slog.Logger,
 ) *OnboardingHandler {
-	return &OnboardingHandler{pool: pool, embedder: embedder, summariser: summariser, wg: wg, logger: logger}
+	return &OnboardingHandler{
+		pool:         pool,
+		embedder:     embedder,
+		summariser:   summariser,
+		cvStructurer: cvStructurer,
+		wg:           wg,
+		logger:       logger,
+	}
 }
 
 // SaveIkigai handles POST /api/v1/onboarding/ikigai.
@@ -170,4 +179,51 @@ func (h *OnboardingHandler) CompleteOnboarding(c fiber.Ctx) error {
 		return model.NewAppError(model.ErrInternal, "failed to complete onboarding")
 	}
 	return c.JSON(fiber.Map{"status": "complete"})
+}
+
+// ImportCV handles POST /api/v1/onboarding/import-cv.
+// Downloads a PDF from a trusted URL, extracts text, and returns structured
+// profile fields via Groq LLM for client-side form pre-fill.
+//
+// @Summary     Import CV from URL
+// @Tags        onboarding
+// @Accept      json
+// @Produce     json
+// @Security    BearerAuth
+// @Param       body body object true "{ \"url\": \"https://...\" }"
+// @Success     200 {object} service.CVData
+// @Failure     400 {object} model.AppError
+// @Failure     503 {object} model.AppError
+// @Router      /api/v1/onboarding/import-cv [post]
+func (h *OnboardingHandler) ImportCV(c fiber.Ctx) error {
+	var body struct {
+		URL string `json:"url"`
+	}
+	if err := c.Bind().JSON(&body); err != nil {
+		return model.NewAppError(model.ErrValidation, "invalid request body")
+	}
+	if body.URL == "" {
+		return model.NewAppError(model.ErrValidation, "url is required")
+	}
+
+	data, err := service.DownloadPDF(c.Context(), body.URL)
+	if err != nil {
+		return model.NewAppError(model.ErrValidation, "failed to download PDF: "+err.Error())
+	}
+
+	text, err := service.ExtractPDFText(data)
+	if err != nil {
+		return model.NewAppError(model.ErrValidation, "failed to extract text from PDF: "+err.Error())
+	}
+
+	if h.cvStructurer == nil {
+		return model.NewAppError(model.ErrServiceUnavailable, "CV structuring not configured")
+	}
+	cv, err := h.cvStructurer.StructureCV(c.Context(), text)
+	if err != nil {
+		h.logger.Error("CV LLM failed", "error", err)
+		return model.NewAppError(model.ErrInternal, "failed to structure CV")
+	}
+
+	return c.JSON(cv)
 }

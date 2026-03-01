@@ -1,6 +1,31 @@
-<% layout("layouts/base", { title: "Onboarding — Social Links" }) %>
+<% layout("../../layouts/base", { title: "Onboarding — Social Links" }) %>
 
-<div class="container py-5" style="max-width: 600px;">
+<div class="container py-5" style="max-width: 600px;" x-data="{
+  cvUrl: '',
+  importing: false,
+  importError: '',
+  async importCV() {
+    if (!this.cvUrl) return;
+    this.importing = true;
+    this.importError = '';
+    try {
+      const res = await fetch('/onboarding/import-cv', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: this.cvUrl })
+      });
+      const data = await res.json();
+      if (!res.ok) { this.importError = data.error || 'Import failed'; return; }
+      if (data.linkedin_url)  document.getElementById('linkedin_url').value  = data.linkedin_url;
+      if (data.github_url)    document.getElementById('github_url').value    = data.github_url;
+      if (data.portfolio_url) document.getElementById('portfolio_url').value = data.portfolio_url;
+    } catch(e) {
+      this.importError = 'Could not reach import service';
+    } finally {
+      this.importing = false;
+    }
+  }
+}">
   <div class="mb-4">
     <div class="d-flex justify-content-between text-muted small mb-1">
       <span>Step 5 of 5</span>
@@ -14,22 +39,44 @@
   <h2 class="fw-bold mb-1">Add your links <span class="text-muted fw-normal fs-5">(optional)</span></h2>
   <p class="text-muted mb-4">Help others find your work. All fields optional.</p>
 
+  <!-- CV Import card -->
+  <div class="card mb-4" style="border-style: dashed;">
+    <div class="card-body">
+      <h6 class="card-title mb-1">⚡ Import from CV / Résumé</h6>
+      <p class="text-muted small mb-3">Paste a public PDF URL — we'll extract your links automatically.</p>
+      <div class="input-group">
+        <input type="url" class="form-control" placeholder="https://example.com/my-cv.pdf"
+               x-model="cvUrl" @keydown.enter.prevent="importCV()" />
+        <button class="btn btn-outline-secondary" type="button"
+                @click="importCV()" :disabled="importing || !cvUrl">
+          <span x-show="!importing">Import</span>
+          <span x-show="importing">Importing…</span>
+        </button>
+      </div>
+      <div x-show="importError" class="text-danger small mt-2" x-text="importError"></div>
+    </div>
+  </div>
+
   <form hx-post="/onboarding/step5" hx-target="#step-content" hx-swap="outerHTML" id="step-content">
     <div class="mb-3">
       <label class="form-label fw-medium">LinkedIn</label>
-      <input type="url" name="linkedin_url" class="form-control" placeholder="https://linkedin.com/in/yourname" />
+      <input id="linkedin_url" type="url" name="linkedin_url" class="form-control"
+             placeholder="https://linkedin.com/in/yourname" />
     </div>
     <div class="mb-3">
       <label class="form-label fw-medium">GitHub</label>
-      <input type="url" name="github_url" class="form-control" placeholder="https://github.com/yourname" />
+      <input id="github_url" type="url" name="github_url" class="form-control"
+             placeholder="https://github.com/yourname" />
     </div>
     <div class="mb-3">
       <label class="form-label fw-medium">Portfolio / website</label>
-      <input type="url" name="portfolio_url" class="form-control" placeholder="https://yoursite.com" />
+      <input id="portfolio_url" type="url" name="portfolio_url" class="form-control"
+             placeholder="https://yoursite.com" />
     </div>
     <div class="mb-4">
       <label class="form-label fw-medium">Twitter / X</label>
-      <input type="url" name="twitter_url" class="form-control" placeholder="https://twitter.com/yourhandle" />
+      <input type="url" name="twitter_url" class="form-control"
+             placeholder="https://twitter.com/yourhandle" />
     </div>
 
     <div class="d-flex justify-content-between mt-4">

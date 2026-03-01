@@ -1,4 +1,4 @@
-<% layout("layouts/base", { title: "Onboarding — Your Ikigai" }) %>
+<% layout("../../layouts/base", { title: "Onboarding — Your Ikigai" }) %>
 
 <div class="container py-5" style="max-width: 640px;">
   <div class="mb-4">

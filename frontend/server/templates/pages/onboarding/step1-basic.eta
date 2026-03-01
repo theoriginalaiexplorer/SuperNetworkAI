@@ -1,4 +1,4 @@
-<% layout("layouts/base", { title: "Onboarding — SuperNetworkAI" }) %>
+<% layout("../../layouts/base", { title: "Onboarding — SuperNetworkAI" }) %>
 
 <div class="container py-5" style="max-width: 600px;">
   <div class="mb-4">
