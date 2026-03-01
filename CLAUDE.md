@@ -17,15 +17,22 @@ make migrate-up    # golang-migrate up
 make migrate-down  # golang-migrate down 1
 make sqlc          # sqlc generate
 make test          # go test ./...
+go test ./internal/service -v              # run specific package with verbose output
+go test -run TestCVPipeline ./... -v       # run specific test by name
 ```
 
 ### Frontend (Bun BFF — run from `frontend/`)
 ```bash
 bun run dev        # hot reload via bun --hot run server/index.ts
+bun run start      # production mode (requires build first)
 bun run build      # tsc + vite build
 bun run typecheck  # tsc --noEmit
 bun run lint       # eslint .
 ```
+
+**Directory structure:**
+- `server/` — Hono app, Eta templates, API client
+- `client/` — Browser JS (Alpine.js, HTMX)
 
 ### Dev Infrastructure
 ```bash
@@ -33,6 +40,11 @@ docker compose up -d    # Start Ollama (port 11434)
 # First run only — pull embedding model:
 docker exec supernetwork_ollama ollama pull nomic-embed-text
 ```
+
+**Testing requirements:**
+- Some tests require `GROQ_API_KEY` in `backend/.env` (will skip if not set)
+- Embedding tests require Ollama running (`docker compose up -d`)
+- Tests use standard Go testing (no testify dependency)
 
 ## Architecture
 
@@ -63,6 +75,9 @@ Bun BFF (Hono + Eta)   ←REST→  Go API (Fiber v3, port 3001)
 - Visibility filter: named CTE `visible_profiles` reused across queries
 - Embedding text: single `BuildEmbeddingText(profile, ikigai)` function
 - Error responses: `AppError` type with `{"code":"SNAKE_CASE","message":"..."}` shape
+  - Exhaustive error codes in `internal/model/errors.go`: `UNAUTHORIZED`, `FORBIDDEN`, `NOT_FOUND`, `CONFLICT`, `VALIDATION_ERROR`, `RATE_LIMITED`, `INTERNAL_ERROR`, `SERVICE_UNAVAILABLE`
+  - Return errors using: `return model.NewAppError(model.ErrNotFound, "profile not found")`
+  - Global error handler registered in `main.go` converts `AppError` → HTTP status + JSON
 - JWT extraction: `UserFromCtx(c)` helper used in all handlers
 
 ### Auth Flow
@@ -93,7 +108,15 @@ Cursor-based using `(created_at, id)` tuples. Default limit: 20, max: 100.
 - `match_cache` — upserted scores; dismissed state preserved across refreshes
 - `blocks` — checked in both directions at the query level
 
-Tool: `sqlc` generates type-safe Go from SQL in `backend/db/queries/`.
+**Migration workflow:**
+1. Create paired files: `00N_name.up.sql`, `00N_name.down.sql` in `backend/db/migrations/`
+2. Run `make migrate-up` to apply (requires `DATABASE_URL` in `.env`)
+3. Run `make migrate-down` to rollback last migration
+
+**Query workflow:**
+1. Write SQL in `backend/db/queries/*.sql` (e.g., `profiles.sql`)
+2. Run `make sqlc` to generate type-safe Go code in `backend/internal/db/`
+3. Use generated methods in services (e.g., `queries.GetProfile(ctx, id)`)
 
 ## API Structure
 

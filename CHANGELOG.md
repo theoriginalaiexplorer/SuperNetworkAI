@@ -11,6 +11,29 @@ Format: each entry lists what was added, what was changed, and what the phase ta
 
 ---
 
+## [phase/8-privacy] — 2026-03-01
+
+### Added
+- `frontend/server/templates/pages/privacy.eta` — Comprehensive privacy policy page (11 sections: information collection, usage, sharing, storage, user rights, cookies, third parties, children's privacy, international transfers, policy changes, contact)
+- `frontend/server/templates/pages/terms.eta` — Complete terms of service page (14 sections: acceptance, changes, registration, user responsibilities, prohibited activities, content & IP, availability, warranties, termination, governing law, general provisions, contact)
+- `frontend/server/routes/pages.ts` — Added public routes for `/privacy` and `/terms` pages (no auth required)
+
+### Changed
+- `frontend/server/routes/pages.ts` — Extended public page routes section to include privacy and terms
+
+### Test criteria passed
+- [x] `go build ./...` — no errors
+- [x] `go vet ./...` — no warnings
+- [x] `bun typecheck` — no errors
+- [x] `GET /privacy` → 200 OK (privacy policy page renders)
+- [x] `GET /terms` → 200 OK (terms of service page renders)
+- [x] Privacy policy includes all required GDPR sections
+- [x] Terms of service includes comprehensive user agreement
+- [x] Both pages accessible without authentication
+- [x] Links in footer navigate correctly between pages
+
+---
+
 ## [infra/firebase-neon] — 2026-03-01
 
 > Emergency infrastructure swap during Supabase India outage.

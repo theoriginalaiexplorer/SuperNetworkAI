@@ -1,0 +1,172 @@
+<% layout("../layouts/base", { title: "Privacy Policy — SuperNetworkAI" }) %>
+
+<nav class="navbar navbar-expand-lg bg-body-tertiary border-bottom">
+  <div class="container">
+    <a class="navbar-brand fw-bold" href="/">SuperNetworkAI</a>
+    <div class="ms-auto d-flex gap-3">
+      <a href="/login" class="nav-link">Log in</a>
+      <a href="/signup" class="nav-link">Sign up</a>
+      <a href="/terms" class="nav-link">Terms</a>
+    </div>
+  </div>
+</nav>
+
+<main class="container py-5">
+  <h1 class="h2 mb-4">Privacy Policy</h1>
+
+  <p class="mb-4 text-muted">Last updated: March 1, 2026</p>
+
+  <section class="mb-5">
+    <h2 class="h4">1. Information We Collect</h2>
+    <p>SuperNetworkAI collects the following types of information:</p>
+    <ul class="list-group list-group-flush mb-3">
+      <li class="list-group-item"><strong>Account Information:</strong> Email, display name, and profile data you provide during onboarding</li>
+      <li class="list-group-item"><strong>Ikigai Data:</strong> Your answers to the 4 Ikigai questions (what you love, what you're good at, what the world needs, what you can be paid for)</li>
+      <li class="list-group-item"><strong>Connection Data:</strong> Information about your connections and messaging activity</li>
+      <li class="list-group-item"><strong>Usage Data:</strong> Application usage patterns and interactions with our services</li>
+      <li class="list-group-item"><strong>Technical Data:</strong> IP address, browser type, device information, and browser cookies</li>
+    </ul>
+  </section>
+
+  <section class="mb-5">
+    <h2 class="h4">2. How We Use Your Information</h2>
+    <div class="card mb-3">
+      <div class="card-body">
+        <h5 class="card-title">Matching & Connections</h5>
+        <p>We use your profile information, Ikigai answers, and skills to power our AI-powered matching algorithm, connecting you with cofounders, teammates, and clients who align with your goals.</p>
+      </div>
+    </div>
+    <div class="card mb-3">
+      <div class="card-body">
+        <h5 class="card-title">Natural Language Search</h5>
+        <p>Your search queries are processed through our AI partner (Groq) to understand your intent and find relevant profiles. Search queries may be stored for service improvement.</p>
+      </div>
+    </div>
+    <div class="card mb-3">
+      <div class="card-body">
+        <h5 class="card-title">Communication</h5>
+        <p>Real-time messaging is handled through WebSocket connections. Message content is stored in our database for delivery and retrieval by conversation participants.</p>
+      </div>
+    </div>
+    <div class="card mb-3">
+      <div class="card-body">
+        <h5 class="card-title">Account Management</h5>
+        <p>Your authentication is managed through Firebase Auth. We store your Firebase user ID and issue our own session tokens for application access. We do not store your Firebase password.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="mb-5">
+    <h2 class="h4">3. Information Sharing</h2>
+    <p>Your profile visibility controls who can see your information:</p>
+    <ul class="list-group list-group-flush mb-3">
+      <li class="list-group-item"><strong>Public Profile:</strong> Visible to all logged-in users through search and matching features</li>
+      <li class="list-group-item"><strong>Private Profile:</strong> Only visible to users you have accepted connections with</li>
+      <li class="list-group-item"><strong>Connections:</strong> Only you and your connected users can see connection details and messages</li>
+      <li class="list-group-item"><strong>Third Parties:</strong> We do not sell your data to third parties. Your information is only used for the services described above.</li>
+    </ul>
+  </section>
+
+  <section class="mb-5">
+    <h2 class="h4">4. Data Storage & Security</h2>
+    <p>We take reasonable measures to protect your information:</p>
+    <ul class="list-group list-group-flush mb-3">
+      <li class="list-group-item"><strong>Encryption:</strong> All data in transit is encrypted using HTTPS/TLS</li>
+      <li class="list-group-item"><strong>Database:</strong> Your data is stored in secure PostgreSQL databases hosted on Neon.tech</li>
+      <li class="list-group-item"><strong>Authentication:</strong> Authentication is managed by Firebase Auth with industry-standard security practices</li>
+      <li class="list-group-item"><strong>Access Control:</strong> Strict access controls limit who can access user data internally</li>
+      <li class="list-group-item"><strong>Embeddings:</strong> Profile embeddings for matching are generated using Nomic API and stored securely</li>
+    </ul>
+  </section>
+
+  <section class="mb-5">
+    <h2 class="h4">5. Your Rights</h2>
+    <div class="row">
+      <div class="col-md-6 mb-3">
+        <div class="card h-100">
+          <div class="card-body">
+            <h5 class="card-title">Access & Correction</h5>
+            <p>You can view, update, or delete your profile information at any time. You can export your data upon request.</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6 mb-3">
+        <div class="card h-100">
+          <div class="card-body">
+            <h5 class="card-title">Data Portability</h5>
+            <p>You can request a copy of all your personal data in a structured format. We will provide it within 30 days of your request.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="mb-5">
+    <h2 class="h4">6. Cookies & Tracking</h2>
+    <p>We use cookies and similar technologies for the following purposes:</p>
+    <ul class="list-group list-group-flush mb-3">
+      <li class="list-group-item"><strong>Authentication:</strong> To keep you logged in and maintain your session</li>
+      <li class="list-group-item"><strong>Preferences:</strong> To remember your settings and preferences</li>
+      <li class="list-group-item"><strong>Analytics:</strong> To understand how our service is used and improve it (anonymized data only)</li>
+    </ul>
+    <p class="text-muted small">You can manage your cookie preferences through your browser settings. Disabling cookies may affect some features.</p>
+  </section>
+
+  <section class="mb-5">
+    <h2 class="h4">7. Third-Party Services</h2>
+    <p>We use the following third-party services:</p>
+    <ul class="list-group list-group-flush mb-3">
+      <li class="list-group-item"><strong>Firebase Auth:</strong> For user authentication and account management. Firebase may collect data as described in their privacy policy.</li>
+      <li class="list-group-item"><strong>Groq API:</strong> For natural language processing and AI-powered features. Groq may collect data as described in their privacy policy.</li>
+      <li class="list-group-item"><strong>Nomic API:</strong> For generating profile embeddings used in matching. Nomic may collect data as described in their privacy policy.</li>
+      <li class="list-group-item"><strong>Neon PostgreSQL:</strong> For secure database hosting of user data.</li>
+      <li class="list-group-item"><strong>Uploadthing:</strong> For file upload and storage services. Uploadthing may collect data as described in their privacy policy.</li>
+    </ul>
+    <p class="text-muted small">Each third-party service has its own privacy policy and data handling practices. We encourage you to review their policies.</p>
+  </section>
+
+  <section class="mb-5">
+    <h2 class="h4">8. Children's Privacy</h2>
+    <p>SuperNetworkAI is not intended for children under the age of 16. We do not knowingly collect personal information from children. If we become aware that we have collected such information without parental consent, we will take steps to delete it.</p>
+  </section>
+
+  <section class="mb-5">
+    <h2 class="h4">9. International Data Transfers</h2>
+    <p>Your information may be stored and processed in the United States and other countries where our service providers operate. By using SuperNetworkAI, you consent to the transfer of your information to these countries.</p>
+  </section>
+
+  <section class="mb-5">
+    <h2 class="h4">10. Changes to This Privacy Policy</h2>
+    <p>We may update this privacy policy from time to time. We will notify you of material changes by:</p>
+    <ul class="list-group list-group-flush mb-3">
+      <li class="list-group-item">Posting the updated policy on our website</li>
+      <li class="list-group-item">Sending you an email notification if you have provided your email address</li>
+    </ul>
+    <p class="text-muted small">Your continued use of SuperNetworkAI after changes to this policy constitutes your acceptance of the updated policy.</p>
+  </section>
+
+  <section class="mb-5">
+    <h2 class="h4">11. Contact Us</h2>
+    <p>If you have questions, concerns, or complaints about this privacy policy or our data practices, please contact us:</p>
+    <div class="card">
+      <div class="card-body">
+        <p class="mb-2"><strong>Email:</strong> privacy@supernetworkai.com</p>
+        <p><strong>General Inquiries:</strong> support@supernetworkai.com</p>
+        <p class="text-muted small">We will respond to your inquiry within 30 days.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="bg-light py-3 border-top">
+  <div class="container text-center">
+    <p class="text-muted small mb-2">
+      &copy; 2026 SuperNetworkAI. All rights reserved.
+    </p>
+    <div class="d-flex justify-content-center gap-3">
+      <a href="/privacy" class="text-decoration-none text-muted">Privacy Policy</a>
+      <span class="text-muted">•</span>
+      <a href="/terms" class="text-decoration-none text-muted">Terms of Service</a>
+    </div>
+  </div>
+</footer>

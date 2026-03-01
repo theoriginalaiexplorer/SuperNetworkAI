@@ -17,7 +17,6 @@
   <script
     src="https://unpkg.com/htmx.org@2.0.4"
     integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+"
-    crossorigin="anonymous"
     defer
   ></script>
 
@@ -28,8 +27,20 @@
   <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 </head>
 <body>
-
   <%~ it.body %>
+
+  <footer class="bg-light py-3 border-top mt-auto">
+    <div class="container text-center">
+      <p class="text-muted small mb-2">
+        &copy; 2026 SuperNetworkAI. All rights reserved.
+      </p>
+      <div class="d-flex justify-content-center gap-3">
+        <a href="/privacy" class="text-decoration-none text-muted">Privacy Policy</a>
+        <span class="text-muted">•</span>
+        <a href="/terms" class="text-decoration-none text-muted">Terms of Service</a>
+      </div>
+    </div>
+  </footer>
 
 </body>
 </html>

@@ -21,7 +21,13 @@
       "Bash(go vet:*)",
       "Bash(go get:*)",
       "Bash(sed:*)",
-      "Bash(bun run:*)"
+      "Bash(bun run:*)",
+      "Bash(go test:*)",
+      "Bash(make build:*)",
+      "Bash(bun install:*)",
+      "Bash(/home/dev/.bun/bin/bun install:*)",
+      "Bash(cd:*)",
+      "Bash(ls:*)"
     ]
   }
 }

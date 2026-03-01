@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "bun --hot run server/index.ts",
+    "dev": "/home/dev/.bun/bin/bun --hot run server/index.ts",
     "build": "tsc --noEmit && vite build",
-    "start": "bun run server/index.ts",
+    "start": "/home/dev/.bun/bin/bun run server/index.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --ext .ts"
   },

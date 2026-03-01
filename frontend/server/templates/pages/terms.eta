@@ -1,0 +1,197 @@
+<% layout("../layouts/base", { title: "Terms of Service — SuperNetworkAI" }) %>
+
+<nav class="navbar navbar-expand-lg bg-body-tertiary border-bottom">
+  <div class="container">
+    <a class="navbar-brand fw-bold" href="/">SuperNetworkAI</a>
+    <div class="ms-auto d-flex gap-3">
+      <a href="/login" class="nav-link">Log in</a>
+      <a href="/signup" class="nav-link">Sign up</a>
+      <a href="/privacy" class="nav-link">Privacy</a>
+    </div>
+  </div>
+</nav>
+
+<main class="container py-5">
+  <h1 class="h2 mb-4">Terms of Service</h1>
+
+  <p class="mb-4 text-muted">Last updated: March 1, 2026</p>
+
+  <div class="alert alert-info mb-4">
+    <strong>Please read these terms carefully before using SuperNetworkAI.</strong>
+    By accessing or using our service, you agree to be bound by these terms of service.
+  </div>
+
+  <section class="mb-5">
+    <h2 class="h4">1. Acceptance of Terms</h2>
+    <p>By creating an account, accessing, or using SuperNetworkAI, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service and our Privacy Policy. If you do not agree to these terms, you must not use our service.</p>
+    <p>SuperNetworkAI reserves the right to update these terms at any time without prior notice. Your continued use of the service after any changes constitutes acceptance of the updated terms.</p>
+  </section>
+
+  <section class="mb-5">
+    <h2 class="h4">2. Changes to Terms</h2>
+    <p>We may modify these terms at any time. We will notify users of material changes by posting the updated terms on our website and/or sending email notifications. Your continued use of the service after modifications constitutes acceptance of the new terms.</p>
+  </section>
+
+  <section class="mb-5">
+    <h2 class="h4">3. Account Registration & Security</h2>
+    <p>To use SuperNetworkAI, you must:</p>
+    <ul class="list-group list-group-flush mb-3">
+      <li class="list-group-item">Be at least 16 years of age</li>
+      <li class="list-group-item">Provide accurate, complete, and current information during registration</li>
+      <li class="list-group-item">Maintain the security of your account credentials</li>
+      <li class="list-group-item">Accept all applicable terms and conditions</li>
+      <li class="list-group-item">Notify us immediately of any unauthorized use of your account</li>
+    </ul>
+    <p>You are responsible for maintaining the confidentiality of your account information and for all activities that occur under your account.</p>
+  </section>
+
+  <section class="mb-5">
+    <h2 class="h4">4. User Responsibilities</h2>
+    <p>As a user of SuperNetworkAI, you agree to:</p>
+    <ul class="list-group list-group-flush mb-3">
+      <li class="list-group-item">Use the service only for its intended purposes</li>
+      <li class="list-group-item">Provide accurate and truthful information in your profile</li>
+      <li class="list-group-item">Respect the rights and privacy of other users</li>
+      <li class="list-group-item">Not engage in harassment, abuse, or harmful behavior toward other users</li>
+      <li class="list-group-item">Not use the service to spam, scam, or deceive others</li>
+      <li class="list-group-item">Not interfere with or disrupt the service or servers</li>
+      <li class="list-group-item">Not attempt to gain unauthorized access to any part of the service or its related systems</li>
+      <li class="list-group-item">Not reverse engineer, decompile, or attempt to extract source code or algorithms from the service</li>
+      <li class="list-group-item">Comply with all applicable laws and regulations</li>
+      <li class="list-group-item">Not use automated tools to scrape, mine, or harvest data from the service</li>
+    </ul>
+  </section>
+
+  <section class="mb-5">
+    <h2 class="h4">5. Prohibited Activities</h2>
+    <p>You may not use SuperNetworkAI for any of the following activities:</p>
+    <ul class="list-group list-group-flush mb-3">
+      <li class="list-group-item">Illegal activities or transactions</li>
+      <li class="list-group-item">Fraud, phishing, or identity theft</li>
+      <li class="list-group-item">Harassment, abuse, or threatening behavior toward other users</li>
+      <li class="list-group-item">Posting or transmitting harmful, illegal, or inappropriate content</li>
+      <li class="list-group-item">Impersonating any person or entity</li>
+      <li class="list-group-item">Violating any applicable local, state, national, or international law</li>
+      <li class="list-group-item">Infringing on intellectual property rights of others</li>
+      <li class="list-group-item">Interfering with or disrupting other users' use of the service</li>
+      <li class="list-group-item">Distributing malware, viruses, or other harmful code</li>
+      <li class="list-group-item">Collecting or harvesting data about other users without their consent</li>
+      <li class="list-group-item">Using the service to solicit personal information from minors</li>
+      <li class="list-group-item">Circumventing or manipulating our matching algorithms or search ranking systems</li>
+      <li class="list-group-item">Creating multiple accounts for abusive purposes</li>
+      <li class="list-group-item">Engaging in any activity that could damage, disable, overburden, or impair the service</li>
+    </ul>
+  </section>
+
+  <section class="mb-5">
+    <h2 class="h4">6. Content & Intellectual Property</h2>
+    <p>All content on SuperNetworkAI, including user profiles, messages, and other user-generated content, remains the property of the users who created it. By submitting content, you grant us a non-exclusive, worldwide, royalty-free license to use, display, and distribute that content for the purposes of providing our service.</p>
+    <p>You represent and warrant that:</p>
+    <ul class="list-group list-group-flush mb-3">
+      <li class="list-group-item">You own all rights to the content you submit</li>
+      <li class="list-group-item">The content does not infringe on any third-party intellectual property rights</li>
+      <li class="list-group-item">The content is accurate, truthful, and not misleading</li>
+      <li class="list-group-item">The content does not violate any applicable law or regulation</li>
+    </ul>
+    <p>You retain ownership of any intellectual property rights you already have in your content. By submitting content, you grant us the right to use it as described above.</p>
+  </section>
+
+  <section class="mb-5">
+    <h2 class="h4">7. Service Availability & Modifications</h2>
+    <p>We strive to maintain SuperNetworkAI's availability and functionality. However, we do not guarantee that the service will be uninterrupted, error-free, or free of viruses or other harmful components. We reserve the right to:</p>
+    <ul class="list-group list-group-flush mb-3">
+      <li class="list-group-item">Suspend, discontinue, or modify all or any part of the service at any time without prior notice</li>
+      <li class="list-group-item">Limit access to certain features or restrict usage of the service</li>
+      <li class="list-group-item">Refuse or remove any content at our sole discretion</li>
+      <li class="list-group-item">Update or modify our matching algorithms and search ranking systems</li>
+      <li class="list-group-item">Introduce new features, pricing, or terms at any time</li>
+    </ul>
+    <p>We will not be liable for any loss or damage resulting from service unavailability or modification.</p>
+  </section>
+
+  <section class="mb-5">
+    <h2 class="h4">8. Disclaimer of Warranties</h2>
+    <p>THE SERVICE IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE, AND NON-INFRINGEMENT.</p>
+    <p>IN NO EVENT SHALL WE BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES ARISING OUT OF OR IN CONNECTION WITH THE SERVICE, INCLUDING BUT NOT LIMITED TO LOSS OF PROFITS, USE, DATA, OR OTHER INTANGIBLES, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SERVICE OR THE PROVISION, ACQUISITION, OR USE OF THE SERVICE.</p>
+  </section>
+
+  <section class="mb-5">
+    <h2 class="h4">9. Limitation of Liability</h2>
+    <p>To the fullest extent permitted by applicable law, SuperNetworkAI, its directors, employees, partners, and agents shall not be liable for:</p>
+    <ul class="list-group list-group-flush mb-3">
+      <li class="list-group-item">Any indirect, incidental, special, consequential, or punitive damages</li>
+      <li class="list-group-item">Damages for loss of profits, use, data, or other intangible losses</li>
+      <li class="list-group-item">Damages resulting from unauthorized access to or use of your account</li>
+      <li class="list-group-item">Damages from interruptions or errors in the service</li>
+      <li class="list-group-item">Damages from third-party actions or events beyond our control</li>
+    </ul>
+    <p>Some jurisdictions do not allow the exclusion or limitation of liability for consequential damages, so the above exclusion may not apply to you.</p>
+  </section>
+
+  <section class="mb-5">
+    <h2 class="h4">10. Indemnification</h2>
+    <p>You agree to indemnify, defend, and hold harmless SuperNetworkAI, its directors, employees, partners, and agents from and against any and all claims, damages, obligations, losses, liabilities, costs, and expenses (including attorneys' fees) arising from:</p>
+    <ul class="list-group list-group-flush mb-3">
+      <li class="list-group-item">Your use of the service</li>
+      <li class="list-group-item">Your violation of these Terms of Service</li>
+      <li class="list-group-item">Your violation of any third-party rights</li>
+      <li class="list-group-item">Your violation of any applicable law or regulation</li>
+    </ul>
+  </section>
+
+  <section class="mb-5">
+    <h2 class="h4">11. Termination</h2>
+    <p>We may terminate or suspend your account and access to the service at any time, without prior notice, for any reason, including but not limited to:</p>
+    <ul class="list-group list-group-flush mb-3">
+      <li class="list-group-item">Violation of these Terms of Service</li>
+      <li class="list-group-item">Violation of our Privacy Policy</li>
+      <li class="list-group-item">Fraud, abuse, or harmful behavior toward other users</li>
+      <li class="list-group-item">Inactivity for an extended period (more than 12 months)</li>
+      <li class="list-group-item">Your request to delete your account</li>
+    </ul>
+    <p>Upon termination, your right to use the service will immediately cease. We reserve the right to remove or delete any content you have posted at our sole discretion.</p>
+  </section>
+
+  <section class="mb-5">
+    <h2 class="h4">12. Governing Law & Dispute Resolution</h2>
+    <p>These Terms of Service shall be governed by and construed in accordance with the laws of the state in which you reside, without regard to its conflict of law provisions.</p>
+    <p>Any dispute arising from these terms shall be resolved through binding arbitration in accordance with the rules of the American Arbitration Association. The arbitrator's award shall be final and binding, and judgment may be entered in any court having jurisdiction.</p>
+  </section>
+
+  <section class="mb-5">
+    <h2 class="h4">13. General Provisions</h2>
+    <ul class="list-group list-group-flush mb-3">
+      <li class="list-group-item"><strong>Severability:</strong> If any provision of these Terms of Service is found to be unenforceable or invalid, the remaining provisions shall continue in full force and effect.</li>
+      <li class="list-group-item"><strong>Waiver:</strong> Our failure to enforce any right or provision of these Terms of Service shall not constitute a waiver of such right or provision.</li>
+      <li class="list-group-item"><strong>Assignment:</strong> You may not assign or transfer these Terms of Service or any rights or obligations hereunder without our prior written consent.</li>
+      <li class="list-group-item"><strong>Entire Agreement:</strong> These Terms of Service constitute the entire agreement between you and SuperNetworkAI regarding your use of the service, superseding any prior agreements between you and SuperNetworkAI regarding the subject matter hereof.</li>
+      <li class="list-group-item"><strong>No Agency:</strong> Nothing in these Terms of Service shall be construed to create any agency, partnership, joint venture, or employer-employee relationship between you and SuperNetworkAI.</li>
+      <li class="list-group-item"><strong>Force Majeure:</strong> SuperNetworkAI shall not be liable for any failure to perform any obligation under these Terms of Service due to causes beyond its reasonable control.</li>
+    </ul>
+  </section>
+
+  <section class="mb-5">
+    <h2 class="h4">14. Contact Information</h2>
+    <p>If you have any questions about these Terms of Service, please contact us:</p>
+    <div class="card">
+      <div class="card-body">
+        <p class="mb-2"><strong>Email:</strong> support@supernetworkai.com</p>
+        <p><strong>Support Hours:</strong> Monday to Friday, 9:00 AM to 5:00 PM PST</p>
+        <p class="text-muted small">We will respond to your inquiry within 30 days.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="bg-light py-3 border-top">
+  <div class="container text-center">
+    <p class="text-muted small mb-2">
+      &copy; 2026 SuperNetworkAI. All rights reserved.
+    </p>
+    <div class="d-flex justify-content-center gap-3">
+      <a href="/privacy" class="text-decoration-none text-muted">Privacy Policy</a>
+      <span class="text-muted">•</span>
+      <a href="/terms" class="text-decoration-none text-muted">Terms of Service</a>
+    </div>
+  </div>
+</footer>

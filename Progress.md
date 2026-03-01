@@ -17,7 +17,7 @@
 | 6 | Connections | ✅ Complete | `phase/6-connections` | 2026-03-01 |
 | 7 | Real-Time Messaging | ✅ Complete | `phase/7-messaging` | 2026-03-01 |
 | — | **Infra: Firebase + Neon** | ✅ Complete | `infra/firebase-neon` | 2026-03-01 |
-| 8 | Privacy & Safety | ⬜ Not Started | `phase/8-privacy` | — |
+| 8 | Privacy & Safety | ✅ Complete | `phase/8-privacy` | 2026-03-01 |
 | 9 | Polish & Hardening | ⬜ Not Started | `phase/9-polish` | — |
 | 10 | GCP Deployment | ⬜ Not Started | `phase/10-deploy` | — |
 

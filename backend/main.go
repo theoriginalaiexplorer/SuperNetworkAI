@@ -11,6 +11,8 @@ package main
 
 import (
 	"context"
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"os"
@@ -104,6 +106,29 @@ func main() {
 	// --- Services ---
 	matchSvc := service.NewMatchService(pool, matchExplainer, logger)
 
+	// --- Uploadthing: Parse secret for API key and app ID ---
+	type uploadthingCreds struct {
+		APIKey string `json:"apiKey"`
+		AppID  string `json:"appId"`
+	}
+
+	var uploadthingAPIKey, uploadthingAppID string
+	if cfg.UploadthingSecret != "" {
+		utConfig := uploadthingCreds{}
+		decoded, err := base64.StdEncoding.DecodeString(cfg.UploadthingSecret)
+		if err != nil {
+			logger.Error("failed to decode UPLOADTHING_SECRET", "error", err)
+			os.Exit(1)
+		}
+		if err := json.Unmarshal(decoded, &utConfig); err != nil {
+			logger.Error("failed to parse UPLOADTHING_SECRET", "error", err)
+			os.Exit(1)
+		}
+		uploadthingAPIKey = utConfig.APIKey
+		uploadthingAppID = utConfig.AppID
+		logger.Info("Uploadthing configured", "app_id", uploadthingAppID)
+	}
+
 	// --- Handlers ---
 	authH := handler.NewAuthHandler(cfg.WSTokenSecret)
 	userH := handler.NewUserHandler(pool, logger)
@@ -114,6 +139,7 @@ func main() {
 	connH := handler.NewConnectionHandler(pool, logger)
 	internalH := handler.NewInternalHandler(pool, matchSvc, &wg, logger)
 	convH := handler.NewConversationHandler(pool, logger)
+	filesH := handler.NewFilesHandler(uploadthingAPIKey, uploadthingAppID)
 
 	// --- WebSocket hub ---
 	authHRef := authH // capture for closure
@@ -133,6 +159,8 @@ func main() {
 	api.Post("/onboarding/ikigai", onboardingH.SaveIkigai)
 	api.Post("/onboarding/complete", onboardingH.CompleteOnboarding)
 	api.Post("/onboarding/import-cv", onboardingH.ImportCV)
+
+	api.Post("/files/presign", filesH.Presign)
 
 	api.Get("/matches", matchH.GetMatches)
 	api.Post("/matches/:matchedUserId/dismiss", matchH.DismissMatch)

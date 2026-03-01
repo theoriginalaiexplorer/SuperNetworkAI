@@ -18,6 +18,8 @@ pageRoutes.use("*", sessionMiddleware);
 pageRoutes.get("/", (c) => renderPartial(c, "pages/landing", {}));
 pageRoutes.get("/login", (c) => renderPartial(c, "pages/login", { error: c.req.query("error") }));
 pageRoutes.get("/signup", (c) => renderPartial(c, "pages/signup", {}));
+pageRoutes.get("/privacy", (c) => renderPartial(c, "pages/privacy", {}));
+pageRoutes.get("/terms", (c) => renderPartial(c, "pages/terms", {}));
 
 // --- Authenticated pages (onboarding guard applied) ---
 const authenticated = new Hono<{ Variables: Variables }>();
