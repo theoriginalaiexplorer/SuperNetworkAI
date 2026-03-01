@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v3"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"supernetwork/backend/internal/middleware"
@@ -18,15 +19,16 @@ import (
 
 // ProfileHandler handles /api/v1/profiles/* routes.
 type ProfileHandler struct {
-	pool      *pgxpool.Pool
-	embedder  service.EmbeddingProvider
-	logger    *slog.Logger
-	wg        *sync.WaitGroup
+	pool     *pgxpool.Pool
+	embedder service.EmbeddingProvider
+	matchSvc service.MatchService
+	logger   *slog.Logger
+	wg       *sync.WaitGroup
 }
 
 // NewProfileHandler creates a ProfileHandler.
-func NewProfileHandler(pool *pgxpool.Pool, embedder service.EmbeddingProvider, wg *sync.WaitGroup, logger *slog.Logger) *ProfileHandler {
-	return &ProfileHandler{pool: pool, embedder: embedder, wg: wg, logger: logger}
+func NewProfileHandler(pool *pgxpool.Pool, embedder service.EmbeddingProvider, matchSvc service.MatchService, wg *sync.WaitGroup, logger *slog.Logger) *ProfileHandler {
+	return &ProfileHandler{pool: pool, embedder: embedder, matchSvc: matchSvc, wg: wg, logger: logger}
 }
 
 // UpdateProfile handles PATCH /api/v1/profiles/me.
@@ -190,6 +192,15 @@ func (h *ProfileHandler) triggerEmbedding(userIDStr string) {
 			`UPDATE profiles SET embedding=$2::vector, embedding_status='current',
 			  embedding_updated_at=NOW(), updated_at=NOW() WHERE user_id=$1`,
 			userIDStr, vecStr)
+
+		// Refresh match cache now that embedding is current
+		if h.matchSvc != nil {
+			if uid, err := uuid.Parse(userIDStr); err == nil {
+				if err := h.matchSvc.RefreshCacheForUser(ctx, uid); err != nil {
+					h.logger.Error("match cache refresh after embedding", "error", err)
+				}
+			}
+		}
 	}()
 }
 

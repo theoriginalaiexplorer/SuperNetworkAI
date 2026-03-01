@@ -35,6 +35,34 @@
     </div>
     <% if (isOwn) { %>
       <a href="/profile/me/edit" class="btn btn-outline-secondary btn-sm">Edit profile</a>
+    <% } else { %>
+      <%
+        const cs = it.connectionStatus ?? 'none';
+        const cDir = it.connectionDirection;
+        const cId = it.connectionId;
+      %>
+      <div id="profile-connect-btn">
+        <% if (cs === 'accepted') { %>
+          <a href="/messages?userId=<%= p.user_id ?? p.id %>"
+             class="btn btn-primary btn-sm">Message</a>
+        <% } else if (cs === 'pending' && cDir === 'sent') { %>
+          <button class="btn btn-outline-secondary btn-sm" disabled>Pending&hellip;</button>
+        <% } else if (cs === 'pending' && cDir === 'received') { %>
+          <button class="btn btn-success btn-sm"
+                  hx-post="/connections/<%= cId %>/accept"
+                  hx-target="#profile-connect-btn"
+                  hx-swap="innerHTML">
+            Accept request
+          </button>
+        <% } else { %>
+          <button class="btn btn-primary btn-sm"
+                  hx-post="/connections/request/<%= p.user_id ?? p.id %>"
+                  hx-target="#profile-connect-btn"
+                  hx-swap="innerHTML">
+            Connect
+          </button>
+        <% } %>
+      </div>
     <% } %>
   </div>
 

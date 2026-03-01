@@ -1,0 +1,78 @@
+<% layout("../layouts/base", { title: "Discover — SuperNetworkAI" }) %>
+
+<nav class="navbar navbar-expand-lg bg-body-tertiary border-bottom">
+  <div class="container-fluid">
+    <a class="navbar-brand fw-bold" href="/dashboard">SuperNetworkAI</a>
+    <div class="ms-auto d-flex align-items-center gap-3">
+      <a href="/discover" class="nav-link active fw-semibold">Discover</a>
+      <a href="/messages" class="nav-link">Messages</a>
+      <a href="/connections" class="nav-link">Connections</a>
+      <a href="/auth/logout" class="btn btn-outline-secondary btn-sm">Log out</a>
+    </div>
+  </div>
+</nav>
+
+<main class="container py-5">
+  <h1 class="h3 mb-4">Discover matches</h1>
+
+  <%
+    const cats = ['', 'cofounder', 'teammate', 'client'];
+    const labels = { '': 'All', cofounder: 'Cofounders', teammate: 'Teammates', client: 'Clients' };
+    const currentCat = it.category ?? '';
+  %>
+
+  <!-- NL search bar -->
+  <div class="mb-4">
+    <div class="input-group">
+      <span class="input-group-text bg-white border-end-0">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+             class="bi bi-search text-muted" viewBox="0 0 16 16">
+          <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/>
+        </svg>
+      </span>
+      <input type="search"
+             name="query"
+             class="form-control border-start-0 ps-0"
+             placeholder="Search e.g. &ldquo;React developer open to equity&rdquo;"
+             autocomplete="off"
+             hx-post="/discover/search"
+             hx-trigger="input changed delay:500ms, search"
+             hx-target="#match-list"
+             hx-swap="innerHTML"
+             hx-indicator="#search-spinner" />
+      <span id="search-spinner"
+            class="htmx-indicator input-group-text bg-white">
+        <span class="spinner-border spinner-border-sm text-muted" role="status"></span>
+      </span>
+    </div>
+    <p class="text-muted small mt-1 mb-0">
+      Natural language — describe who you are looking for in plain English.
+    </p>
+  </div>
+
+  <!-- Category filter tabs -->
+  <ul class="nav nav-tabs mb-4" id="categoryTabs">
+    <% cats.forEach(cat => { %>
+      <li class="nav-item">
+        <a class="nav-link <%= currentCat === cat ? 'active' : '' %>"
+           href="/discover?category=<%= cat %>"
+           hx-get="/discover/matches?category=<%= cat %>"
+           hx-target="#match-list"
+           hx-swap="innerHTML"
+           hx-push-url="/discover?category=<%= cat %>">
+          <%= labels[cat] %>
+        </a>
+      </li>
+    <% }) %>
+  </ul>
+
+  <!-- Match grid — HTMX target for search, category switches, and load-more -->
+  <div class="row g-4" id="match-list">
+    <%~ await include("../partials/match-list", {
+      matches: it.matches,
+      category: currentCat,
+      offset: 0,
+      limit: it.limit ?? 20
+    }) %>
+  </div>
+</main>

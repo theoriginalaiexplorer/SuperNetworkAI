@@ -11,6 +11,44 @@ Format: each entry lists what was added, what was changed, and what the phase ta
 
 ---
 
+## [infra/firebase-neon] — 2026-03-01
+
+> Emergency infrastructure swap during Supabase India outage.
+
+### Changed
+- **Auth provider**: Supabase Auth → **Firebase Auth** (Email/Password, global CDN)
+  - `frontend/server/routes/auth.ts` — full rewrite: `signInWithEmailAndPassword`, `createUserWithEmailAndPassword`, `sendEmailVerification`, `applyActionCode`; BFF issues its own HS256 JWT (`sub` = UUID, 1h TTL) after Firebase credential exchange
+  - `frontend/server/middleware/session.ts` — replaced Supabase `refreshSession` with Firebase REST token endpoint (`securetoken.googleapis.com/v1/token`); re-signs BFF JWT using `decodeJwt` (expiry-tolerant UUID extraction) + `jose` `SignJWT`
+- **JWT validation**: RS256 + JWKS (Supabase) → **HS256 shared secret** (BFF-signed)
+  - `backend/internal/middleware/auth.go` — removed JWKS cache (`jwksCache`, `getJWKS`); replaced with `jwt.WithKey(jwa.HS256, bffSecret)` (single-pass, no network call)
+  - `backend/internal/config/config.go` — removed `SupabaseURL`, `SupabaseKey`; added `BffJWTSecret` (required, validated at startup)
+  - `backend/main.go` — removed `jwksURL := fmt.Sprintf(...)`; passes `[]byte(cfg.BffJWTSecret)` to `RequireAuth`
+- **Database**: Supabase PostgreSQL → **Neon.tech PostgreSQL** (`aws-us-east-1`, pgvector supported)
+  - `backend/.env` — `DATABASE_URL` updated to Neon pooled connection string; `BFF_JWT_SECRET` added
+  - `frontend/package.json` — removed `@supabase/supabase-js`; added `firebase@^11`, `jose@^5`
+
+### Test criteria passed
+- [x] `go build ./...` — no errors
+- [x] `go vet ./...` — no warnings
+- [x] `bun typecheck` — no errors
+- [x] `GET /healthz` → `{"status":"ok"}`
+- [x] `GET /readyz` (Neon DB) → `{"status":"ready"}`
+- [x] `GET /api/v1/users/me` (no token) → 401 UNAUTHORIZED
+- [x] `POST /internal/matches/refresh` (no secret) → 401 UNAUTHORIZED
+- [x] `GET /api/v1/users/me` (valid HS256 BFF JWT) → 404 NOT_FOUND (middleware accepts token; user not yet in Neon)
+- [x] `GET localhost:3000/` → 200
+- [x] `GET localhost:3000/login` → 200
+- [x] `GET localhost:3000/dashboard` (no cookie) → 302 → /login
+- [x] `TestOllamaEmbedding` — 768-dim vector confirmed (2.31s)
+- [x] `TestCVPipeline` — download → extract → Groq LLM → CVData parsed (0.48s)
+
+### Post-emergency follow-up (when Supabase recovers or as production hardening)
+- Add `auth_mapping (firebase_uid TEXT PK, user_uuid UUID DEFAULT gen_random_uuid())` Neon table to stabilise UUID-per-Firebase-UID across devices
+- Optionally keep Neon as primary DB (no schema changes required — identical migrations)
+- Optionally keep Firebase Auth (avoids Supabase vendor lock-in)
+
+---
+
 ## [phase/7-messaging] — 2026-03-01
 
 ### Added

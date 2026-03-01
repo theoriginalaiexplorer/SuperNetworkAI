@@ -1,0 +1,76 @@
+<% const tab = it.tab ?? 'accepted'; %>
+<% if ((it.connections ?? []).length === 0) { %>
+  <div class="text-center py-5 text-muted">
+    <% if (tab === 'pending') { %>
+      <p class="mb-1 fs-5">No pending requests.</p>
+      <p class="small mb-0">When someone sends you a connection request, it will appear here.</p>
+    <% } else { %>
+      <p class="mb-1 fs-5">No connections yet.</p>
+      <p class="small mb-0">
+        <a href="/discover">Discover people</a> and send a connection request to get started.
+      </p>
+    <% } %>
+  </div>
+<% } else { %>
+  <div class="row g-3">
+    <% for (const conn of it.connections) { %>
+      <div class="col-md-6 col-lg-4" id="conn-<%= conn.id %>">
+        <div class="card h-100 shadow-sm">
+          <div class="card-body">
+            <div class="d-flex align-items-center gap-3 mb-3">
+              <% if (conn.avatar_url) { %>
+                <img src="<%= conn.avatar_url %>" alt="Avatar"
+                     class="rounded-circle flex-shrink-0"
+                     width="48" height="48" style="object-fit:cover;" />
+              <% } else { %>
+                <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center
+                            text-white fw-bold flex-shrink-0"
+                     style="width:48px;height:48px;font-size:1.25rem;">
+                  <%= (conn.display_name?.[0] ?? '?').toUpperCase() %>
+                </div>
+              <% } %>
+              <div class="flex-grow-1 overflow-hidden">
+                <h6 class="mb-0 fw-semibold text-truncate">
+                  <a href="/profile/<%= conn.other_user_id %>" class="text-decoration-none text-dark">
+                    <%= conn.display_name %>
+                  </a>
+                </h6>
+                <% if (conn.tagline) { %>
+                  <p class="text-muted small mb-0 text-truncate"><%= conn.tagline %></p>
+                <% } %>
+              </div>
+            </div>
+
+            <% if (conn.message && tab === 'pending') { %>
+              <p class="small text-muted fst-italic mb-3">&ldquo;<%= conn.message %>&rdquo;</p>
+            <% } %>
+
+            <div class="d-flex gap-2 flex-wrap">
+              <% if (tab === 'accepted') { %>
+                <a href="/messages?userId=<%= conn.other_user_id %>"
+                   class="btn btn-primary btn-sm">Message</a>
+                <a href="/profile/<%= conn.other_user_id %>"
+                   class="btn btn-outline-secondary btn-sm">View profile</a>
+              <% } else if (tab === 'pending' && conn.direction === 'received') { %>
+                <button class="btn btn-primary btn-sm"
+                        hx-post="/connections/<%= conn.id %>/accept"
+                        hx-target="#conn-<%= conn.id %> .d-flex.gap-2"
+                        hx-swap="innerHTML">
+                  Accept
+                </button>
+                <button class="btn btn-outline-danger btn-sm"
+                        hx-post="/connections/<%= conn.id %>/reject"
+                        hx-target="#conn-<%= conn.id %>"
+                        hx-swap="outerHTML">
+                  Reject
+                </button>
+              <% } else if (tab === 'pending' && conn.direction === 'sent') { %>
+                <span class="badge bg-secondary align-self-center">Request sent</span>
+              <% } %>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% } %>
+  </div>
+<% } %>

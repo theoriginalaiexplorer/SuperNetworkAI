@@ -10,9 +10,10 @@
     "lint": "eslint . --ext .ts"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.49.1",
     "eta": "^3.5.0",
-    "hono": "^4.7.4"
+    "firebase": "^11.0.0",
+    "hono": "^4.7.4",
+    "jose": "^5.0.0"
   },
   "devDependencies": {
     "@types/bun": "latest",

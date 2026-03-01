@@ -5,8 +5,8 @@
     <a class="navbar-brand fw-bold" href="/dashboard">SuperNetworkAI</a>
     <div class="ms-auto d-flex align-items-center gap-3">
       <a href="/discover" class="nav-link">Discover</a>
-      <a href="/messages" class="nav-link">Messages</a>
       <a href="/connections" class="nav-link">Connections</a>
+      <a href="/messages" class="nav-link">Messages</a>
       <a href="/auth/logout" class="btn btn-outline-secondary btn-sm">Log out</a>
     </div>
   </div>

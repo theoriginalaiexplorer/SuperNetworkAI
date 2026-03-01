@@ -40,6 +40,7 @@ type IkigaiSummariser interface {
 // MatchService manages match cache computation and retrieval.
 type MatchService interface {
 	GetMatches(ctx context.Context, userID uuid.UUID, f MatchFilter) ([]Match, error)
+	DismissMatch(ctx context.Context, userID, matchedUserID uuid.UUID) error
 	GetExplanation(ctx context.Context, matchedUserID uuid.UUID, currentUserID uuid.UUID) (string, error)
 	RefreshCacheForUser(ctx context.Context, userID uuid.UUID) error
 }
@@ -83,13 +84,19 @@ type CVData struct {
 	PortfolioURL string
 }
 
-// Match represents a cached match entry.
+// Match represents a cached match entry plus a profile snapshot for display.
 type Match struct {
 	MatchedUserID uuid.UUID
 	Score         float64
 	Categories    []string
 	Explanation   string
 	Dismissed     bool
+	// Profile snapshot (populated by MatchService.GetMatches)
+	DisplayName string
+	Tagline     string
+	Skills      []string
+	Intent      []string
+	AvatarURL   string
 }
 
 // MatchFilter controls which matches to return.

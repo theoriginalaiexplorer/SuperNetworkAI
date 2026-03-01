@@ -16,6 +16,7 @@
 | 5 | AI Search & Explanations | ✅ Complete | `phase/5-ai-search` | 2026-03-01 |
 | 6 | Connections | ✅ Complete | `phase/6-connections` | 2026-03-01 |
 | 7 | Real-Time Messaging | ✅ Complete | `phase/7-messaging` | 2026-03-01 |
+| — | **Infra: Firebase + Neon** | ✅ Complete | `infra/firebase-neon` | 2026-03-01 |
 | 8 | Privacy & Safety | ⬜ Not Started | `phase/8-privacy` | — |
 | 9 | Polish & Hardening | ⬜ Not Started | `phase/9-polish` | — |
 | 10 | GCP Deployment | ⬜ Not Started | `phase/10-deploy` | — |
@@ -291,6 +292,40 @@ Reconnect with fresh WS token after disconnect              →  [ ] pending (re
 - WS auth is first-message (`{type:"auth",token}`) not header-based, keeping `/ws` outside JWT middleware
 - BFF derives WS URL from `GO_API_URL` by replacing `http:` → `ws:` / `https:` → `wss:`
 - `window.__CHAT__` pattern avoids double-escaping of JSON in Eta templates
+
+---
+
+---
+
+## Infra Migration — Firebase Auth + Neon PostgreSQL
+
+**Date**: 2026-03-01 | **Trigger**: Supabase India outage (Auth + DB both down)
+
+### What Changed
+- **Auth**: Supabase Auth → Firebase Auth (Email/Password). BFF signs HS256 JWT (`BFF_JWT_SECRET`) after Firebase credential exchange; Go API validates HS256 instead of RS256/JWKS.
+- **Database**: Supabase PostgreSQL → Neon.tech PostgreSQL (`aws-us-east-1`, pgvector supported). Zero schema changes — identical migrations applied.
+- **No changes** to any handler, service, ws, or template files.
+
+### Test Results
+```
+go build ./...                                    →  [x] pass
+go vet ./...                                      →  [x] pass
+bun typecheck                                     →  [x] pass
+GET  /healthz                                     →  [x] pass — {"status":"ok"}
+GET  /readyz (Neon)                               →  [x] pass — {"status":"ready"}
+GET  /api/v1/users/me (no token)                  →  [x] pass — 401 UNAUTHORIZED
+POST /internal/matches/refresh (no secret)        →  [x] pass — 401 UNAUTHORIZED
+GET  /api/v1/users/me (valid HS256 JWT)           →  [x] pass — 404 (auth accepted, user not in DB)
+GET  localhost:3000/ (landing)                    →  [x] pass — 200
+GET  localhost:3000/login                         →  [x] pass — 200
+GET  localhost:3000/dashboard (no cookie)         →  [x] pass — 302 → /login
+TestOllamaEmbedding                               →  [x] pass — 768-dim (2.31s)
+TestCVPipeline                                    →  [x] pass — download+extract+LLM (0.48s)
+```
+
+### Post-emergency TODOs
+- [ ] Add `auth_mapping` table (firebase_uid → stable UUID) for multi-device consistency
+- [ ] Decide: keep Firebase + Neon permanently, or revert to Supabase when recovered
 
 ---
 

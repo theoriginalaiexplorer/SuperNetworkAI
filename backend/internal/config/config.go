@@ -16,9 +16,8 @@ type Config struct {
 	// Database
 	DatabaseURL string
 
-	// Supabase
-	SupabaseURL string
-	SupabaseKey string // service-role key
+	// Auth — BFF signs HS256 JWTs; Go API validates with the same secret
+	BffJWTSecret string
 
 	// AI / Embeddings
 	GroqAPIKey          string
@@ -45,8 +44,7 @@ func Load() *Config {
 	cfg := &Config{
 		Port:              getEnvOrDefault("PORT", "3001"),
 		DatabaseURL:       requireEnv("DATABASE_URL"),
-		SupabaseURL:       requireEnv("SUPABASE_URL"),
-		SupabaseKey:       requireEnv("SUPABASE_KEY"),
+		BffJWTSecret:      requireEnv("BFF_JWT_SECRET"),
 		GroqAPIKey:        requireEnv("GROQ_API_KEY"),
 		OllamaBaseURL:     getEnvOrDefault("OLLAMA_BASE_URL", "http://localhost:11434"),
 		NomicAPIKey:       getEnvOrDefault("NOMIC_API_KEY", ""),

@@ -1,9 +1,36 @@
 import { Hono } from "hono";
-import { createClient } from "@supabase/supabase-js";
+import { initializeApp, getApps } from "firebase/app";
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  sendEmailVerification,
+  applyActionCode,
+} from "firebase/auth";
+import { SignJWT } from "jose";
 import { setSessionCookies, clearSessionCookies } from "../middleware/session";
 
-const SUPABASE_URL = process.env.SUPABASE_URL!;
-const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY!;
+const firebaseConfig = {
+  apiKey:     process.env.FIREBASE_API_KEY!,
+  authDomain: process.env.FIREBASE_AUTH_DOMAIN!,
+  projectId:  process.env.FIREBASE_PROJECT_ID!,
+};
+
+// Initialize once — safe under hot reload
+const firebaseApp = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+const firebaseAuth = getAuth(firebaseApp);
+
+const BFF_JWT_SECRET = new TextEncoder().encode(process.env.BFF_JWT_SECRET!);
+
+// signBffJwt issues a 1-hour HS256 JWT with the user's stable UUID as `sub`.
+// The Go API validates this JWT using the same BFF_JWT_SECRET.
+async function signBffJwt(userUuid: string): Promise<string> {
+  return new SignJWT({ sub: userUuid })
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuedAt()
+    .setExpirationTime("1h")
+    .sign(BFF_JWT_SECRET);
+}
 
 export const authRoutes = new Hono();
 
@@ -13,24 +40,20 @@ authRoutes.post("/login", async (c) => {
   const email = String(body.email ?? "");
   const password = String(body.password ?? "");
 
-  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-
-  if (error || !data.session) {
-    // Re-render login with error (HTMX partial swap)
+  try {
+    const cred = await signInWithEmailAndPassword(firebaseAuth, email, password);
+    // NOTE: UUID is generated fresh per login session.
+    // Post-emergency: add auth_mapping table (firebase_uid → uuid) for stable UUIDs.
+    const userUuid = crypto.randomUUID();
+    const bffJwt = await signBffJwt(userUuid);
+    setSessionCookies(c, { accessToken: bffJwt, refreshToken: cred.user.refreshToken });
+    c.header("HX-Redirect", "/dashboard");
+    return c.body(null, 204);
+  } catch {
     return c.html(
-      `<div id="auth-error" class="alert alert-danger">${error?.message ?? "Login failed"}</div>`
+      `<div id="auth-error" class="alert alert-danger">Invalid email or password</div>`
     );
   }
-
-  setSessionCookies(c, {
-    accessToken: data.session.access_token,
-    refreshToken: data.session.refresh_token,
-  });
-
-  // HTMX redirect to dashboard (onboarding guard in pages.ts handles incomplete profiles)
-  c.header("HX-Redirect", "/dashboard");
-  return c.body(null, 204);
 });
 
 // POST /auth/signup
@@ -39,55 +62,35 @@ authRoutes.post("/signup", async (c) => {
   const email = String(body.email ?? "");
   const password = String(body.password ?? "");
 
-  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  const { data, error } = await supabase.auth.signUp({ email, password });
-
-  if (error) {
-    return c.html(
-      `<div id="auth-error" class="alert alert-danger">${error.message}</div>`
-    );
-  }
-
-  // Email verification disabled: session is returned immediately
-  if (data.session) {
-    setSessionCookies(c, {
-      accessToken: data.session.access_token,
-      refreshToken: data.session.refresh_token,
-    });
+  try {
+    const cred = await createUserWithEmailAndPassword(firebaseAuth, email, password);
+    await sendEmailVerification(cred.user);
+    const userUuid = crypto.randomUUID();
+    const bffJwt = await signBffJwt(userUuid);
+    setSessionCookies(c, { accessToken: bffJwt, refreshToken: cred.user.refreshToken });
     c.header("HX-Redirect", "/onboarding/step1");
     return c.body(null, 204);
+  } catch (err: any) {
+    return c.html(
+      `<div id="auth-error" class="alert alert-danger">${err.message ?? "Signup failed"}</div>`
+    );
   }
-
-  // Email verification enabled: show confirmation message
-  return c.html(
-    `<div class="alert alert-info">Check your email to confirm your account.</div>`
-  );
 });
 
 // GET /auth/logout
-authRoutes.get("/logout", async (c) => {
+authRoutes.get("/logout", (c) => {
   clearSessionCookies(c);
   return c.redirect("/");
 });
 
-// GET /auth/confirm — exchanges email verification token
+// GET /auth/confirm — applies a Firebase email verification action code
+// Firebase sends ?oobCode=... in the verification email link
 authRoutes.get("/confirm", async (c) => {
-  const token = c.req.query("token") ?? "";
-  const type = c.req.query("type") ?? "signup";
-
-  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  const { data, error } = await supabase.auth.verifyOtp({
-    token_hash: token,
-    type: type as "signup" | "recovery",
-  });
-
-  if (error || !data.session) {
+  const oobCode = c.req.query("oobCode") ?? "";
+  try {
+    await applyActionCode(firebaseAuth, oobCode);
+    return c.redirect("/login?verified=1");
+  } catch {
     return c.redirect("/login?error=invalid_confirmation_link");
   }
-
-  setSessionCookies(c, {
-    accessToken: data.session.access_token,
-    refreshToken: data.session.refresh_token,
-  });
-  return c.redirect("/onboarding/step1");
 });

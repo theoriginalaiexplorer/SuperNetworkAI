@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v3"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"supernetwork/backend/internal/middleware"
@@ -21,6 +22,7 @@ type OnboardingHandler struct {
 	embedder     service.EmbeddingProvider
 	summariser   service.IkigaiSummariser
 	cvStructurer service.CVStructurer
+	matchSvc     service.MatchService
 	wg           *sync.WaitGroup
 	logger       *slog.Logger
 }
@@ -31,6 +33,7 @@ func NewOnboardingHandler(
 	embedder service.EmbeddingProvider,
 	summariser service.IkigaiSummariser,
 	cvStructurer service.CVStructurer,
+	matchSvc service.MatchService,
 	wg *sync.WaitGroup,
 	logger *slog.Logger,
 ) *OnboardingHandler {
@@ -39,6 +42,7 @@ func NewOnboardingHandler(
 		embedder:     embedder,
 		summariser:   summariser,
 		cvStructurer: cvStructurer,
+		matchSvc:     matchSvc,
 		wg:           wg,
 		logger:       logger,
 	}
@@ -161,6 +165,15 @@ func (h *OnboardingHandler) asyncIkigaiPost(userIDStr string, answers service.Ik
 		`UPDATE profiles SET embedding=$2::vector, embedding_status='current',
 		  embedding_updated_at=NOW(), updated_at=NOW() WHERE user_id=$1`,
 		userIDStr, vecStr)
+
+	// Refresh match cache now that embedding is current
+	if h.matchSvc != nil {
+		if uid, err := uuid.Parse(userIDStr); err == nil {
+			if err := h.matchSvc.RefreshCacheForUser(ctx, uid); err != nil {
+				h.logger.Error("match cache refresh after ikigai", "error", err)
+			}
+		}
+	}
 }
 
 // CompleteOnboarding handles POST /api/v1/onboarding/complete — marks onboarding done.

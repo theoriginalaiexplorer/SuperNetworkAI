@@ -1,16 +1,13 @@
 import type { Context, Next } from "hono";
 import type { Variables } from "../types";
-import { createClient } from "@supabase/supabase-js";
-
-const SUPABASE_URL = process.env.SUPABASE_URL!;
-const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY!;
+import { SignJWT, decodeJwt } from "jose";
 
 export interface Session {
   accessToken: string;
   refreshToken: string;
 }
 
-// Mutex guard: Supabase refresh tokens are single-use.
+// Mutex guard: Firebase refresh tokens are single-use.
 // Only one refresh request may proceed at a time.
 let refreshing: Promise<Session | null> | null = null;
 
@@ -23,9 +20,9 @@ export function getSession(c: Context): Session | null {
   return { accessToken: access, refreshToken: refresh };
 }
 
-// refreshSession exchanges the refresh token for a new access token.
-// Protected by a mutex so only one refresh happens at a time across
-// concurrent HTMX requests.
+// refreshSession calls the Firebase token refresh REST endpoint to get a new
+// refresh token, then re-signs a fresh BFF HS256 JWT (preserving the UUID sub
+// from the existing access cookie).
 export async function refreshSession(
   c: Context,
   refreshToken: string
@@ -34,14 +31,39 @@ export async function refreshSession(
 
   refreshing = (async () => {
     try {
-      const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-      const { data, error } = await supabase.auth.refreshSession({ refresh_token: refreshToken });
-      if (error || !data.session) return null;
+      const res = await fetch(
+        `https://securetoken.googleapis.com/v1/token?key=${process.env.FIREBASE_API_KEY}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: `grant_type=refresh_token&refresh_token=${encodeURIComponent(refreshToken)}`,
+        }
+      );
+      if (!res.ok) return null;
+      const data = await res.json() as { refresh_token?: string };
+      if (!data.refresh_token) return null;
 
-      const session: Session = {
-        accessToken: data.session.access_token,
-        refreshToken: data.session.refresh_token,
-      };
+      // Extract UUID sub from existing access cookie — decodeJwt skips verification
+      // so it works even on an expired token (which is why we're refreshing).
+      const existingJwt = getCookie(c, "sn_access");
+      if (!existingJwt) return null;
+      let sub: string;
+      try {
+        const claims = decodeJwt(existingJwt);
+        if (!claims.sub) return null;
+        sub = claims.sub;
+      } catch {
+        return null;
+      }
+
+      const BFF_SECRET = new TextEncoder().encode(process.env.BFF_JWT_SECRET!);
+      const newBffJwt = await new SignJWT({ sub })
+        .setProtectedHeader({ alg: "HS256" })
+        .setIssuedAt()
+        .setExpirationTime("1h")
+        .sign(BFF_SECRET);
+
+      const session: Session = { accessToken: newBffJwt, refreshToken: data.refresh_token };
       setSessionCookies(c, session);
       return session;
     } finally {
@@ -72,8 +94,7 @@ export function clearSessionCookies(c: Context): void {
 }
 
 // sessionMiddleware attaches session to c.var and handles transparent token refresh.
-// If the access token is missing but refresh token exists, attempts a refresh.
-export async function sessionMiddleware(c: Context, next: Next): Promise<Response | void> {
+export async function sessionMiddleware(c: Context<{ Variables: Variables }>, next: Next): Promise<Response | void> {
   const session = getSession(c);
 
   if (!session) {

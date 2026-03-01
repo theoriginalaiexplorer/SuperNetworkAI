@@ -77,7 +77,7 @@ Online communities have members with rich context — skills, goals, passions �
 - Browser → Go API: Native WebSocket ONLY. No REST calls from browser.
 - BFF → Go API: JSON REST over HTTP, `Authorization: Bearer <jwt>`.
 - Go API → External: DB, Groq, Ollama/Nomic, Uploadthing.
-- BFF → Supabase Auth: Only for login/logout/token-refresh (not Go API concern).
+- BFF → Firebase Auth: Only for login/logout/token-refresh (not Go API concern). BFF issues its own HS256 JWT after Firebase exchange.
 
 ---
 
@@ -296,7 +296,7 @@ supernetwork-ai/
 │       ├── config/
 │       │   └── config.go           ← struct with all env vars; fail-fast on missing
 │       ├── middleware/
-│       │   ├── auth.go             ← JWT verify (lestrrat-go/jwx/v2) + JWKS cache
+│       │   ├── auth.go             ← JWT verify (lestrrat-go/jwx/v2) HS256 shared secret
 │       │   │                          UserFromCtx(c) helper
 │       │   ├── recovery.go         ← panic → 500, never crash server
 │       │   ├── cors.go
@@ -768,67 +768,86 @@ S→C: { "type": "error", "code": "NOT_CONNECTED|BLOCKED|TOO_LONG|UNAUTHORIZED" 
 
 ## 8. Authentication & Session Design
 
-### 8.1 Signup Flow (NEW — was missing)
+### 8.1 Signup Flow
 ```
 1. Browser submits POST /auth/signup (BFF route)
    Body: { email, password }
 
-2. BFF calls Supabase Auth:
-   POST {SUPABASE_URL}/auth/v1/signup
-   Body: { email, password }
-   → Returns: { user, access_token, refresh_token }
-     OR requires email verification (config dependent)
+2. BFF calls Firebase Auth SDK:
+   createUserWithEmailAndPassword(firebaseAuth, email, password)
+   → sends verification email automatically (sendEmailVerification)
+   → Returns: { user.refreshToken }
 
-3. If email verification disabled (recommended for MVP, configurable in Supabase):
-   Same cookie flow as login → redirect to /onboarding/step1
+3. BFF generates a UUID (stable per user — see §8.5) and signs a BFF JWT (HS256, 1h TTL)
+   BFF sets cookies:
+     sn_access:  BFF JWT (HttpOnly; SameSite=Lax; Path=/; Max-Age=3600)
+     sn_refresh: Firebase refreshToken (HttpOnly; SameSite=Lax; Path=/auth; Max-Age=604800)
+   HX-Redirect: /onboarding/step1
 
-4. If email verification enabled:
-   BFF renders "Check your email" page. User clicks link → redirects to
-   /auth/confirm?token=... → BFF exchanges token → sets cookies → /onboarding/step1
+4. Email verification: user clicks Firebase link → GET /auth/confirm?oobCode=...
+   BFF calls applyActionCode(firebaseAuth, oobCode) → redirect to /login?verified=1
 ```
 
 ### 8.2 Login Flow
 ```
 1. POST /auth/login (BFF)
-2. BFF → POST {SUPABASE_URL}/auth/v1/token?grant_type=password
-3. Response: { access_token, refresh_token, expires_in }
+2. BFF calls Firebase Auth: signInWithEmailAndPassword(email, password)
+3. BFF generates/looks up UUID for this Firebase UID, signs BFF JWT (HS256, 1h TTL)
 4. BFF sets cookies:
-   sn_access:  HttpOnly; Secure; SameSite=Lax; Path=/;            Max-Age=3600
-   sn_refresh: HttpOnly; Secure; SameSite=Lax; Path=/auth/refresh; Max-Age=604800
+   sn_access:  BFF JWT (HttpOnly; SameSite=Lax; Path=/; Max-Age=3600)
+   sn_refresh: Firebase refreshToken (HttpOnly; SameSite=Lax; Path=/auth; Max-Age=604800)
 5. HX-Redirect: /dashboard (or /onboarding if !onboarding_complete)
 ```
 
 ### 8.3 Onboarding Guard
 ```
 BFF pages.ts middleware (applied to all authenticated pages except /onboarding/*):
-1. Read JWT from sn_access cookie
-2. Parse JWT locally (verify signature with Supabase public key) to extract sub (user ID)
-   — this avoids a Go API round-trip just to check onboarding status
-3. Call Go API: GET /api/v1/users/me
-4. If profile.onboarding_complete == false → HX-Redirect: /onboarding/step1
+1. Read BFF JWT from sn_access cookie
+2. Call Go API: GET /api/v1/users/me (Bearer = BFF JWT)
+3. If profile.onboarding_complete == false → HX-Redirect: /onboarding/step1
 ```
 
 ### 8.4 Token Refresh (with Concurrent Guard)
 ```
-BFF session middleware wraps Go API calls:
+BFF session middleware (refreshSession in session.ts):
 
-mutex.Lock()  // only ONE token refresh at a time
-  if already refreshed (check cookie timestamp) → mutex.Unlock(); retry with new token
-  else:
-    call Supabase POST /auth/v1/token?grant_type=refresh_token
-    on success: update both cookies, mutex.Unlock(), retry Go API call
-    on failure: clear cookies, mutex.Unlock(), redirect to /login
+mutex (Promise-level) — only ONE refresh at a time
+  POST https://securetoken.googleapis.com/v1/token
+    grant_type=refresh_token&refresh_token=<sn_refresh cookie>
+  on success:
+    decode UUID from existing sn_access (decodeJwt — expiry-tolerant)
+    re-sign new BFF JWT (HS256, 1h TTL) with same UUID sub
+    update both cookies, resolve mutex
+  on failure:
+    return null → caller redirects to /login
 ```
 
-> **Why mutex**: Supabase refresh tokens are single-use. If 3 concurrent HTMX requests all hit 401 simultaneously, all 3 would try to refresh. Only the first succeeds; the other two would fail and log the user out. The mutex ensures exactly one refresh happens.
+> **Why mutex**: Firebase refresh tokens are single-use. Concurrent HTMX requests hitting an expired token simultaneously would each attempt a refresh; only the first would succeed. The mutex guard ensures exactly one refresh happens.
 
-### 8.5 JWT Verification in Go API
+### 8.5 UUID Stability (Firebase UID → DB UUID)
 ```
-- Algorithm: RS256 (Supabase default)
-- JWKS: {SUPABASE_URL}/auth/v1/.well-known/jwks.json
-- Cache: 30-minute TTL. Re-fetch on verify failure (handles key rotation).
-- Library: github.com/lestrrat-go/jwx/v2
-- user.ID stored in Fiber context locals via UserFromCtx(c) helper
+Firebase UIDs are alphanumeric strings (e.g. "abc123XYZ"), not UUIDs.
+The Go DB schema uses UUID PRIMARY KEY for users.id.
+
+Emergency approach (current): fresh crypto.randomUUID() per login session.
+  — Works for single-device use; breaks cross-device if user has existing DB row.
+
+Production fix: add auth_mapping table to Neon:
+  CREATE TABLE auth_mapping (
+    firebase_uid TEXT PRIMARY KEY,
+    user_uuid    UUID NOT NULL DEFAULT gen_random_uuid()
+  );
+  On every login: INSERT ... ON CONFLICT DO NOTHING; SELECT user_uuid WHERE firebase_uid=$1
+  This makes UUID stable across all devices and sessions.
+```
+
+### 8.6 JWT Verification in Go API
+```
+- Algorithm: HS256 (shared secret: BFF_JWT_SECRET env var)
+- No JWKS, no network call — purely in-process HMAC verification
+- Library: github.com/lestrrat-go/jwx/v2 (jwt.WithKey(jwa.HS256, secret))
+- sub claim: UUID string → parsed with uuid.Parse → stored in Fiber context locals
+- UserFromCtx(c) helper used in all handlers
 ```
 
 ### 8.6 WebSocket Token

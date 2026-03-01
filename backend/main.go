@@ -98,8 +98,8 @@ func main() {
 	app.Get("/swagger/doc.json", handler.SwaggerJSON)
 	app.Get("/swagger", handler.SwaggerUI)
 
-	// --- JWKS URL for auth middleware ---
-	jwksURL := fmt.Sprintf("%s/auth/v1/.well-known/jwks.json", cfg.SupabaseURL)
+	// --- BFF JWT secret for auth middleware ---
+	bffSecret := []byte(cfg.BffJWTSecret)
 
 	// --- Services ---
 	matchSvc := service.NewMatchService(pool, matchExplainer, logger)
@@ -120,7 +120,7 @@ func main() {
 	hub := ws.NewHub(pool, authHRef.ValidateWSToken, logger)
 
 	// --- API v1 routes (all require JWT) ---
-	api := app.Group("/api/v1", middleware.RequireAuth(jwksURL))
+	api := app.Group("/api/v1", middleware.RequireAuth(bffSecret))
 
 	api.Post("/auth/ws-token", authH.IssueWSToken)
 
