@@ -1,0 +1,24 @@
+<% layout("../layouts/base", { title: "Error — SuperNetworkAI" }) %>
+
+<div class="container d-flex justify-content-center align-items-center min-vh-100">
+  <div class="card text-center" style="max-width: 500px;">
+    <div class="card-body py-5">
+      <h1 class="h4 mb-3" id="error-title">500</h1>
+      <p class="text-muted mb-3" id="error-message">Something went wrong on our end. Our team has been notified and is working to fix the issue.</p>
+      <p class="text-muted small mb-4">Error code: <span id="error-code">500</span></p>
+      <p><a href="/dashboard" class="btn btn-primary">Return to Dashboard</a></p>
+      <p class="text-muted small">Timestamp: <%= new Date().toISOString() %></p>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Parse error from URL query params or page data
+  const errorTitle = '<%= it.error_title || "500" %>';
+  const errorMessage = '<%= it.error_message || "Something went wrong" %>';
+  const errorCode = '<%= it.error_code || "500" %>';
+  
+  document.getElementById('error-title').textContent = errorTitle;
+  document.getElementById('error-message').textContent = errorMessage;
+  document.getElementById('error-code').textContent = errorCode;
+</script>

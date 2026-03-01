@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title><%= it.title ?? "SuperNetworkAI" %></title>
+  <title><%= it.title ?? "Ollama3D" %></title>
 
   <!-- Bootstrap 5 CSS only (no Bootstrap JS) -->
   <link
@@ -28,19 +28,44 @@
 </head>
 <body>
   <%~ it.body %>
-
-  <footer class="bg-light py-3 border-top mt-auto">
-    <div class="container text-center">
-      <p class="text-muted small mb-2">
-        &copy; 2026 SuperNetworkAI. All rights reserved.
-      </p>
-      <div class="d-flex justify-content-center gap-3">
-        <a href="/privacy" class="text-decoration-none text-muted">Privacy Policy</a>
-        <span class="text-muted">•</span>
-        <a href="/terms" class="text-decoration-none text-muted">Terms of Service</a>
+  
+  <!-- Loading Overlay -->
+  <div
+    Alpine.data("loading", () => ({
+      isLoading: false,
+      message: '',
+    })
+    class="position-fixed top-0 left-0 w-100 h-100 d-flex justify-content-center align-items-center bg-dark bg-opacity-50"
+    style="display: none; z-index: 9999;"
+    x-show="loadingStore().isLoading"
+    id="loading-overlay"
+  >
+    <div class="card text-center" style="min-width: 300px;">
+      <div class="card-body p-4">
+        <div class="spinner-border" style="
+          width: 3rem;
+          height: 3rem;
+          border: 4px solid rgba(255,255,255,0.25);
+          border-radius: 50%;
+          border-top-color: var(--bs-primary);
+          animation: spin 1.2s linear infinite;
+        ">
+        </div>
+        <p class="mb-3 text-white"><span x-text="loadingStore().message">Loading...</span></p>
       </div>
     </div>
-  </footer>
 
+  <style>
+    @keyframes spin {
+      0% { transform: rotate(360deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .spinner-border {
+      border: 4px solid;
+      border-top-color: var(--bs-primary);
+      border-right: 2px solid transparent;
+      border-radius: 50%;
+    }
+  </style>
 </body>
 </html>
