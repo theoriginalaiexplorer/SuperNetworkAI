@@ -1,0 +1,26 @@
+# air — hot reload for Go
+# https://github.com/air-verse/air
+
+root = "."
+tmp_dir = "tmp"
+
+[build]
+  cmd = "go build -o tmp/api ."
+  bin = "tmp/api"
+  include_ext = ["go"]
+  exclude_dir = ["tmp", "vendor", "docs", "db/generated"]
+  delay = 500
+  kill_delay = "200ms"
+  rerun = false
+
+[log]
+  time = true
+
+[color]
+  main = "magenta"
+  watcher = "cyan"
+  build = "yellow"
+  runner = "green"
+
+[misc]
+  clean_on_exit = true

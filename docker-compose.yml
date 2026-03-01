@@ -1,0 +1,26 @@
+version: '3.9'
+
+# Development services.
+# Usage:
+#   docker compose up ollama        — start Ollama embedding server
+#   docker exec -it <name> ollama pull nomic-embed-text  — pull model (first run only)
+
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: supernetwork_ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+
+volumes:
+  ollama_data:
+    name: supernetwork_ollama_data

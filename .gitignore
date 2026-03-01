@@ -1,0 +1,32 @@
+# Go
+backend/tmp/
+backend/vendor/
+backend/*.exe
+backend/api
+backend/docs/swagger.json
+backend/docs/swagger.yaml
+
+# Environment
+.env
+**/.env
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Bun / Node
+frontend/node_modules/
+frontend/dist/
+bun.lockb
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+*.tar
+
+# Air (Go hot reload)
+backend/tmp/

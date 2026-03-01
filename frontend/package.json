@@ -1,0 +1,25 @@
+{
+  "name": "supernetwork-bff",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "bun --hot run server/index.ts",
+    "build": "tsc --noEmit && vite build",
+    "start": "bun run server/index.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --ext .ts"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.1",
+    "eta": "^3.5.0",
+    "hono": "^4.7.4"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@typescript-eslint/eslint-plugin": "^8.26.1",
+    "@typescript-eslint/parser": "^8.26.1",
+    "eslint": "^9.21.0",
+    "typescript": "^5.8.2",
+    "vite": "^6.2.1"
+  }
+}
