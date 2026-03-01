@@ -1,0 +1,86 @@
+<% layout("layouts/base", { title: (it.profile?.display_name ?? "Profile") + " — SuperNetworkAI" }) %>
+
+<nav class="navbar navbar-expand-lg bg-body-tertiary border-bottom">
+  <div class="container-fluid">
+    <a class="navbar-brand fw-bold" href="/dashboard">SuperNetworkAI</a>
+    <div class="ms-auto d-flex gap-3">
+      <a href="/discover" class="nav-link">Discover</a>
+      <a href="/messages" class="nav-link">Messages</a>
+      <a href="/auth/logout" class="btn btn-outline-secondary btn-sm">Log out</a>
+    </div>
+  </div>
+</nav>
+
+<main class="container py-5" style="max-width: 760px;">
+  <% const p = it.profile; const ik = it.ikigai; const isOwn = it.isOwn; %>
+
+  <div class="d-flex align-items-start gap-4 mb-4">
+    <% if (p.avatar_url) { %>
+      <img src="<%= p.avatar_url %>" alt="Avatar" class="rounded-circle" width="80" height="80" style="object-fit:cover;" />
+    <% } else { %>
+      <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white fw-bold"
+           style="width:80px;height:80px;font-size:2rem;">
+        <%= (p.display_name?.[0] ?? '?').toUpperCase() %>
+      </div>
+    <% } %>
+    <div class="flex-grow-1">
+      <h1 class="h3 mb-0 fw-bold"><%= p.display_name %></h1>
+      <p class="text-muted mb-1"><%= p.tagline %></p>
+      <div class="d-flex flex-wrap gap-1 mt-1">
+        <% (p.intent ?? []).forEach(i => { %>
+          <span class="badge bg-primary-subtle text-primary-emphasis text-capitalize"><%= i %></span>
+        <% }) %>
+        <span class="badge bg-light text-muted border"><%= p.availability?.replace('-',' ') %></span>
+      </div>
+    </div>
+    <% if (isOwn) { %>
+      <a href="/profile/me/edit" class="btn btn-outline-secondary btn-sm">Edit profile</a>
+    <% } %>
+  </div>
+
+  <% if (p.bio) { %>
+    <section class="mb-4">
+      <h2 class="h6 text-muted text-uppercase mb-2">About</h2>
+      <p><%= p.bio %></p>
+    </section>
+  <% } %>
+
+  <% if (ik?.ai_summary) { %>
+    <section class="mb-4">
+      <h2 class="h6 text-muted text-uppercase mb-2">Ikigai</h2>
+      <p class="fst-italic"><%= ik.ai_summary %></p>
+    </section>
+  <% } %>
+
+  <% if ((p.skills ?? []).length > 0) { %>
+    <section class="mb-4">
+      <h2 class="h6 text-muted text-uppercase mb-2">Skills</h2>
+      <div class="d-flex flex-wrap gap-2">
+        <% (p.skills ?? []).forEach(s => { %>
+          <span class="badge bg-light text-dark border"><%= s %></span>
+        <% }) %>
+      </div>
+    </section>
+  <% } %>
+
+  <% if ((p.interests ?? []).length > 0) { %>
+    <section class="mb-4">
+      <h2 class="h6 text-muted text-uppercase mb-2">Interests</h2>
+      <div class="d-flex flex-wrap gap-2">
+        <% (p.interests ?? []).forEach(i => { %>
+          <span class="badge bg-light text-dark border"><%= i %></span>
+        <% }) %>
+      </div>
+    </section>
+  <% } %>
+
+  <section class="mb-4">
+    <h2 class="h6 text-muted text-uppercase mb-2">Links</h2>
+    <div class="d-flex flex-wrap gap-3">
+      <% if (p.linkedin_url) { %><a href="<%= p.linkedin_url %>" target="_blank" rel="noopener">LinkedIn</a><% } %>
+      <% if (p.github_url) { %><a href="<%= p.github_url %>" target="_blank" rel="noopener">GitHub</a><% } %>
+      <% if (p.portfolio_url) { %><a href="<%= p.portfolio_url %>" target="_blank" rel="noopener">Portfolio</a><% } %>
+      <% if (p.twitter_url) { %><a href="<%= p.twitter_url %>" target="_blank" rel="noopener">Twitter / X</a><% } %>
+    </div>
+  </section>
+</main>

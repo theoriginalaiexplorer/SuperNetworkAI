@@ -10,7 +10,7 @@
 |---|---|---|---|---|
 | 0 | Foundation | ✅ Complete | `phase/0-foundation` | 2026-03-01 |
 | 1 | Authentication | ✅ Complete | `phase/1-auth` | 2026-03-01 |
-| 2 | Onboarding & Profiles | ⬜ Not Started | `phase/2-profiles` | — |
+| 2 | Onboarding & Profiles | ✅ Complete | `phase/2-profiles` | 2026-03-01 |
 | 3 | CV Import | ⬜ Not Started | `phase/3-cv-import` | — |
 | 4 | Match Discovery | ⬜ Not Started | `phase/4-matches` | — |
 | 5 | AI Search & Explanations | ⬜ Not Started | `phase/5-ai-search` | — |
@@ -97,7 +97,35 @@ POST /api/v1/auth/ws-token   →  [ ] pending (requires live server)
 ---
 
 ## Phase 2 — Onboarding & Profiles
-**Blocked by**: Phase 1
+
+**Completed**: 2026-03-01
+
+### Checklist
+- [x] Go: `service/interfaces.go` — all service interfaces
+- [x] Go: `service/embedding/` — provider interface, Ollama impl, Nomic impl, `BuildEmbeddingText()`
+- [x] Go: `service/llm/ikigai.go` — IkigaiSummariser via Groq
+- [x] Go: `handler/users.go` — GET /api/v1/users/me + /users/:id (visibility + block)
+- [x] Go: `handler/profiles.go` — PATCH /api/v1/profiles/me + visibility; async embedding
+- [x] Go: `handler/onboarding.go` — POST /api/v1/onboarding/ikigai + complete
+- [x] Go: sqlc query files for users + profiles
+- [x] BFF: `server/types.ts` — Hono typed context variables
+- [x] BFF: `server/routes/onboarding.ts` — 5-step onboarding handlers
+- [x] BFF: `server/routes/pages.ts` — profile view routes
+- [x] UI: Onboarding steps 2–5 templates
+- [x] UI: Profile view template
+
+### Test Results
+```
+go build ./...                    →  [x] pass
+bun typecheck                     →  [x] pass
+5-step onboarding completion      →  [ ] pending (requires live server)
+embedding_status → current        →  [ ] pending (requires Ollama)
+```
+
+---
+
+## Phase 3 — CV Import
+**Blocked by**: Phase 2
 
 ---
 

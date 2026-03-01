@@ -11,6 +11,36 @@ Format: each entry lists what was added, what was changed, and what the phase ta
 
 ---
 
+## [phase/2-profiles] — 2026-03-01
+
+### Added
+- `backend/internal/service/interfaces.go` — all service interfaces (ISP: EmbeddingProvider, NLSearchParser, CVStructurer, MatchExplainer, IkigaiSummariser, MatchService)
+- `backend/internal/service/embedding/text.go` — `BuildEmbeddingText()` single source of truth for embedding input
+- `backend/internal/service/embedding/ollama.go` — Ollama embedding provider (nomic-embed-text, 5s timeout)
+- `backend/internal/service/embedding/nomic.go` — Nomic Embed API provider (nomic-embed-text-v1.5, 5s timeout)
+- `backend/internal/service/llm/ikigai.go` — `IkigaiSummariser` via Groq llama-3.1-8b-instant (JSON mode)
+- `backend/internal/handler/users.go` — `GET /api/v1/users/me`, `GET /api/v1/users/:id` (block + visibility enforcement)
+- `backend/internal/handler/profiles.go` — `PATCH /api/v1/profiles/me`, `PATCH /api/v1/profiles/me/visibility`; async embedding goroutine with WaitGroup + panic recovery
+- `backend/internal/handler/onboarding.go` — `POST /api/v1/onboarding/ikigai`, `POST /api/v1/onboarding/complete`; async AI summary + embedding
+- `backend/db/queries/users.sql` + `profiles.sql` — sqlc query files
+- `backend/main.go` — wired embedding provider, LLM services, WaitGroup, all Phase 2 routes
+- `frontend/server/types.ts` — Hono `Variables` type for typed `c.get("session")`
+- `frontend/server/routes/onboarding.ts` — 5-step onboarding HTMX route handlers (GET + POST each step)
+- `frontend/server/routes/pages.ts` — profile view routes (`/profile/me`, `/profile/:id`)
+- `frontend/server/templates/pages/onboarding/step2-ikigai.eta` — 4 Ikigai question form
+- `frontend/server/templates/pages/onboarding/step3-skills.eta` — tag-input skills & interests (Alpine.js)
+- `frontend/server/templates/pages/onboarding/step4-intent.eta` — intent checkboxes, availability, working style
+- `frontend/server/templates/pages/onboarding/step5-links.eta` — social links (optional), completes onboarding
+- `frontend/server/templates/pages/profile.eta` — profile view page (own + others)
+
+### Test criteria passed
+- [x] `go build ./...` — no errors
+- [x] `bun typecheck` — no errors
+- [ ] Complete 5 onboarding steps → `profile.onboarding_complete = true` (requires live server)
+- [ ] `profile.embedding_status` changes to 'current' within 5s (requires Ollama)
+
+---
+
 ## [phase/1-auth] — 2026-03-01
 
 ### Added

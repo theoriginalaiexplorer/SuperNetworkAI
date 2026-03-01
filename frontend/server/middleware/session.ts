@@ -1,4 +1,5 @@
 import type { Context, Next } from "hono";
+import type { Variables } from "../types";
 import { createClient } from "@supabase/supabase-js";
 
 const SUPABASE_URL = process.env.SUPABASE_URL!;

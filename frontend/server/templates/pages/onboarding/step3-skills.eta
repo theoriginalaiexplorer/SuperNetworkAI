@@ -1,0 +1,63 @@
+<% layout("layouts/base", { title: "Onboarding — Skills & Interests" }) %>
+
+<div class="container py-5" style="max-width: 600px;" x-data="{ skills: [], interests: [], newSkill: '', newInterest: '' }">
+  <div class="mb-4">
+    <div class="d-flex justify-content-between text-muted small mb-1">
+      <span>Step 3 of 5</span>
+      <span>Skills & interests</span>
+    </div>
+    <div class="progress" style="height: 6px;">
+      <div class="progress-bar" style="width: 60%;"></div>
+    </div>
+  </div>
+
+  <h2 class="fw-bold mb-1">Your skills & interests</h2>
+  <p class="text-muted mb-4">Add at least 3 skills. These are used directly in AI matching.</p>
+
+  <form hx-post="/onboarding/step3" hx-target="#step-content" hx-swap="outerHTML" id="step-content">
+    <!-- Skills -->
+    <div class="mb-4">
+      <label class="form-label fw-medium">Skills</label>
+      <div class="d-flex gap-2 mb-2">
+        <input type="text" class="form-control" placeholder="e.g. TypeScript" x-model="newSkill"
+               @keydown.enter.prevent="if(newSkill.trim()){skills.push(newSkill.trim());newSkill=''}" />
+        <button type="button" class="btn btn-outline-primary btn-sm"
+                @click="if(newSkill.trim()){skills.push(newSkill.trim());newSkill=''}">Add</button>
+      </div>
+      <div class="d-flex flex-wrap gap-2">
+        <template x-for="(skill, i) in skills" :key="i">
+          <span class="badge bg-primary d-flex align-items-center gap-1" style="font-size:.85rem;">
+            <input type="hidden" name="skills[]" :value="skill" />
+            <span x-text="skill"></span>
+            <button type="button" class="btn-close btn-close-white btn-sm" @click="skills.splice(i,1)"></button>
+          </span>
+        </template>
+      </div>
+    </div>
+
+    <!-- Interests -->
+    <div class="mb-4">
+      <label class="form-label fw-medium">Interests</label>
+      <div class="d-flex gap-2 mb-2">
+        <input type="text" class="form-control" placeholder="e.g. Climate tech" x-model="newInterest"
+               @keydown.enter.prevent="if(newInterest.trim()){interests.push(newInterest.trim());newInterest=''}" />
+        <button type="button" class="btn btn-outline-secondary btn-sm"
+                @click="if(newInterest.trim()){interests.push(newInterest.trim());newInterest=''}">Add</button>
+      </div>
+      <div class="d-flex flex-wrap gap-2">
+        <template x-for="(interest, i) in interests" :key="i">
+          <span class="badge bg-secondary d-flex align-items-center gap-1" style="font-size:.85rem;">
+            <input type="hidden" name="interests[]" :value="interest" />
+            <span x-text="interest"></span>
+            <button type="button" class="btn-close btn-close-white btn-sm" @click="interests.splice(i,1)"></button>
+          </span>
+        </template>
+      </div>
+    </div>
+
+    <div class="d-flex justify-content-between mt-4">
+      <a href="/onboarding/step2" class="btn btn-outline-secondary">← Back</a>
+      <button type="submit" class="btn btn-primary px-4">Next →</button>
+    </div>
+  </form>
+</div>

@@ -1,0 +1,40 @@
+<% layout("layouts/base", { title: "Onboarding — Social Links" }) %>
+
+<div class="container py-5" style="max-width: 600px;">
+  <div class="mb-4">
+    <div class="d-flex justify-content-between text-muted small mb-1">
+      <span>Step 5 of 5</span>
+      <span>Social links</span>
+    </div>
+    <div class="progress" style="height: 6px;">
+      <div class="progress-bar" style="width: 100%;"></div>
+    </div>
+  </div>
+
+  <h2 class="fw-bold mb-1">Add your links <span class="text-muted fw-normal fs-5">(optional)</span></h2>
+  <p class="text-muted mb-4">Help others find your work. All fields optional.</p>
+
+  <form hx-post="/onboarding/step5" hx-target="#step-content" hx-swap="outerHTML" id="step-content">
+    <div class="mb-3">
+      <label class="form-label fw-medium">LinkedIn</label>
+      <input type="url" name="linkedin_url" class="form-control" placeholder="https://linkedin.com/in/yourname" />
+    </div>
+    <div class="mb-3">
+      <label class="form-label fw-medium">GitHub</label>
+      <input type="url" name="github_url" class="form-control" placeholder="https://github.com/yourname" />
+    </div>
+    <div class="mb-3">
+      <label class="form-label fw-medium">Portfolio / website</label>
+      <input type="url" name="portfolio_url" class="form-control" placeholder="https://yoursite.com" />
+    </div>
+    <div class="mb-4">
+      <label class="form-label fw-medium">Twitter / X</label>
+      <input type="url" name="twitter_url" class="form-control" placeholder="https://twitter.com/yourhandle" />
+    </div>
+
+    <div class="d-flex justify-content-between mt-4">
+      <a href="/onboarding/step4" class="btn btn-outline-secondary">← Back</a>
+      <button type="submit" class="btn btn-success px-4">Complete profile →</button>
+    </div>
+  </form>
+</div>

@@ -15,6 +15,7 @@ import (
 	"log/slog"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 
@@ -27,6 +28,8 @@ import (
 	"supernetwork/backend/internal/health"
 	"supernetwork/backend/internal/middleware"
 	"supernetwork/backend/internal/model"
+	"supernetwork/backend/internal/service/embedding"
+	"supernetwork/backend/internal/service/llm"
 )
 
 func main() {
@@ -44,6 +47,22 @@ func main() {
 		os.Exit(1)
 	}
 	defer pool.Close()
+
+	// --- Embedding provider (swapped via EMBEDDING_PROVIDER env var) ---
+	var embedProvider interface {
+		Embed(ctx context.Context, text string) ([]float32, error)
+	}
+	if cfg.EmbeddingProvider == "nomic" {
+		embedProvider = embedding.NewNomicProvider(cfg.NomicAPIKey)
+	} else {
+		embedProvider = embedding.NewOllamaProvider(cfg.OllamaBaseURL)
+	}
+
+	// --- LLM services ---
+	ikigaiSummariser := llm.NewIkigaiSummariser(cfg.GroqAPIKey)
+
+	// --- WaitGroup for goroutine tracking (graceful shutdown) ---
+	var wg sync.WaitGroup
 
 	// --- Background services ---
 	handler.StartTokenPurger()
@@ -77,14 +96,25 @@ func main() {
 	// --- JWKS URL for auth middleware ---
 	jwksURL := fmt.Sprintf("%s/auth/v1/.well-known/jwks.json", cfg.SupabaseURL)
 
-	// --- Auth handler ---
+	// --- Handlers ---
 	authH := handler.NewAuthHandler(cfg.WSTokenSecret)
+	userH := handler.NewUserHandler(pool, logger)
+	profileH := handler.NewProfileHandler(pool, embedProvider, &wg, logger)
+	onboardingH := handler.NewOnboardingHandler(pool, embedProvider, ikigaiSummariser, &wg, logger)
 
 	// --- API v1 routes (all require JWT) ---
 	api := app.Group("/api/v1", middleware.RequireAuth(jwksURL))
 
-	// Auth
 	api.Post("/auth/ws-token", authH.IssueWSToken)
+
+	api.Get("/users/me", userH.GetMe)
+	api.Get("/users/:id", userH.GetByID)
+
+	api.Patch("/profiles/me", profileH.UpdateProfile)
+	api.Patch("/profiles/me/visibility", profileH.SetVisibility)
+
+	api.Post("/onboarding/ikigai", onboardingH.SaveIkigai)
+	api.Post("/onboarding/complete", onboardingH.CompleteOnboarding)
 
 	// --- Graceful shutdown ---
 	quit := make(chan os.Signal, 1)
@@ -100,7 +130,10 @@ func main() {
 	}()
 
 	<-quit
-	logger.Info("shutting down server")
+	logger.Info("shutting down server — waiting for goroutines")
+
+	// Wait for embedding + LLM goroutines to finish
+	wg.Wait()
 
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer shutdownCancel()

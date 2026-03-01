@@ -1,0 +1,43 @@
+<% layout("layouts/base", { title: "Onboarding — Your Ikigai" }) %>
+
+<div class="container py-5" style="max-width: 640px;">
+  <div class="mb-4">
+    <div class="d-flex justify-content-between text-muted small mb-1">
+      <span>Step 2 of 5</span>
+      <span>Your Ikigai</span>
+    </div>
+    <div class="progress" style="height: 6px;">
+      <div class="progress-bar" style="width: 40%;"></div>
+    </div>
+  </div>
+
+  <h2 class="fw-bold mb-1">Discover your Ikigai</h2>
+  <p class="text-muted mb-4">Your answers power our AI matching. Be specific — quality over length.</p>
+
+  <form hx-post="/onboarding/step2" hx-target="#step-content" hx-swap="outerHTML" id="step-content">
+    <div class="mb-3">
+      <label class="form-label fw-medium">What do you love? <span class="text-danger">*</span></label>
+      <textarea name="what_you_love" class="form-control" rows="3" required
+                placeholder="e.g. Building products that solve real problems, open source, teaching others"></textarea>
+    </div>
+    <div class="mb-3">
+      <label class="form-label fw-medium">What are you good at? <span class="text-danger">*</span></label>
+      <textarea name="what_youre_good_at" class="form-control" rows="3" required
+                placeholder="e.g. Full-stack development, system design, turning ambiguous problems into clear specs"></textarea>
+    </div>
+    <div class="mb-3">
+      <label class="form-label fw-medium">What does the world need? <span class="text-danger">*</span></label>
+      <textarea name="what_world_needs" class="form-control" rows="3" required
+                placeholder="e.g. Better developer tooling, accessible mental health resources"></textarea>
+    </div>
+    <div class="mb-3">
+      <label class="form-label fw-medium">What can you be paid for? <span class="text-danger">*</span></label>
+      <textarea name="what_you_can_be_paid_for" class="form-control" rows="3" required
+                placeholder="e.g. Software consulting, technical writing, SaaS product development"></textarea>
+    </div>
+    <div class="d-flex justify-content-between mt-4">
+      <a href="/onboarding/step1" class="btn btn-outline-secondary">← Back</a>
+      <button type="submit" class="btn btn-primary px-4">Next →</button>
+    </div>
+  </form>
+</div>

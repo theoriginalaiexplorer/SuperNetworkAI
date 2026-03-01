@@ -1,8 +1,9 @@
 import { Hono } from "hono";
+import type { Variables } from "./types";
 import { authRoutes } from "./routes/auth";
 import { pageRoutes } from "./routes/pages";
 
-const app = new Hono();
+const app = new Hono<{ Variables: Variables }>();
 
 // Liveness probe — always 200 if the process is alive.
 app.get("/healthz", (c) => c.json({ status: "ok" }));

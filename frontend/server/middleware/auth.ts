@@ -1,9 +1,10 @@
 import type { Context, Next } from "hono";
+import type { Variables } from "../types";
 import { getSession, refreshSession, clearSessionCookies } from "./session";
 
 // requireAuth redirects unauthenticated requests to /login.
 // Must be used after sessionMiddleware on protected routes.
-export async function requireAuth(c: Context, next: Next): Promise<Response | void> {
+export async function requireAuth(c: Context<{ Variables: Variables }>, next: Next): Promise<Response | void> {
   let session = c.get("session") as { accessToken: string; refreshToken: string } | undefined;
 
   if (!session) {

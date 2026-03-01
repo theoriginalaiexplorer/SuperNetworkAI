@@ -1,10 +1,12 @@
 import { Hono } from "hono";
+import type { Variables } from "../types";
 import { requireAuth } from "../middleware/auth";
 import { sessionMiddleware } from "../middleware/session";
 import { renderPartial } from "../lib/render";
 import { apiClient } from "../lib/api";
+import { onboardingRoutes } from "./onboarding";
 
-export const pageRoutes = new Hono();
+export const pageRoutes = new Hono<{ Variables: Variables }>();
 
 // Apply session middleware globally for page routes
 pageRoutes.use("*", sessionMiddleware);
@@ -15,7 +17,7 @@ pageRoutes.get("/login", (c) => renderPartial(c, "pages/login", { error: c.req.q
 pageRoutes.get("/signup", (c) => renderPartial(c, "pages/signup", {}));
 
 // --- Authenticated pages (onboarding guard applied) ---
-const authenticated = new Hono();
+const authenticated = new Hono<{ Variables: Variables }>();
 authenticated.use("*", requireAuth);
 
 // Onboarding guard: redirect to /onboarding/step1 if profile incomplete
@@ -42,7 +44,28 @@ async function onboardingGuard(
 authenticated.use("/dashboard", onboardingGuard);
 authenticated.get("/dashboard", (c) => renderPartial(c, "pages/dashboard", {}));
 
+// Profile view
+authenticated.get("/profile/me", async (c) => {
+  const session = c.get("session") as { accessToken: string };
+  const api = apiClient(session.accessToken);
+  const me = await api.get<{ user: object; profile: object; ikigai: object }>("/api/v1/users/me");
+  return renderPartial(c, "pages/profile", { profile: me.profile, ikigai: me.ikigai, isOwn: true });
+});
+
+authenticated.get("/profile/:id", async (c) => {
+  const session = c.get("session") as { accessToken: string };
+  const api = apiClient(session.accessToken);
+  try {
+    const profile = await api.get<object>(`/api/v1/users/${c.req.param("id")}`);
+    return renderPartial(c, "pages/profile", { profile, isOwn: false });
+  } catch (e: any) {
+    if (e.status === 403) return c.text("Access denied", 403);
+    if (e.status === 404) return c.text("Not found", 404);
+    throw e;
+  }
+});
+
 // Onboarding steps (no onboarding guard — that would cause redirect loop)
-authenticated.get("/onboarding/step1", (c) => renderPartial(c, "pages/onboarding/step1-basic", {}));
+pageRoutes.route("/onboarding", onboardingRoutes);
 
 pageRoutes.route("/", authenticated);
