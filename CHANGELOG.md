@@ -43,7 +43,8 @@ Format: each entry lists what was added, what was changed, and what the phase ta
 - [x] `GET localhost:3000/dashboard` (no auth) → 302
 - [x] `POST /api/v1/onboarding/import-cv` (no auth) → 401
 - [x] Groq API (llama-3.3-70b-versatile) — reachable via CVStructurer
-- [ ] End-to-end CV import with authenticated user + hosted PDF URL (requires signed-in user)
+- [x] CV pipeline unit test (localhost PDF → extract 1,472 chars → Groq LLM → CVData in 1.28s)
+- [ ] End-to-end CV import via HTTP with authenticated user (blocked: Supabase project paused)
 
 ---
 
@@ -78,7 +79,9 @@ Format: each entry lists what was added, what was changed, and what the phase ta
 - [x] `PATCH /api/v1/profiles/me` (no auth) → 401 UNAUTHORIZED
 - [x] `POST /api/v1/onboarding/ikigai` (no auth) → 401 UNAUTHORIZED
 - [ ] Complete 5 onboarding steps → `profile.onboarding_complete = true` (requires signed-in user)
-- [ ] `profile.embedding_status` → `current` within 5s of profile update (requires signed-in user)
+- [x] Ollama embedding unit test — 768-dim vector in 1.33s (nomic-embed-text confirmed)
+- [ ] Complete 5 onboarding steps → `profile.onboarding_complete = true` (blocked: Supabase project paused)
+- [ ] `profile.embedding_status` → `current` within 5s of profile update (blocked: Supabase project paused)
 
 ---
 
@@ -107,8 +110,8 @@ Format: each entry lists what was added, what was changed, and what the phase ta
 - [x] `GET /dashboard` (no session cookie) → 302 redirect to /login
 - [x] `POST /api/v1/auth/ws-token` (no auth) → 401 UNAUTHORIZED
 - [x] `GET /swagger/` → 200; `GET /swagger/doc.json` → 200 valid JSON spec
-- [ ] `POST /auth/login` (valid creds) → HX-Redirect to /dashboard (requires live Supabase user)
-- [ ] `POST /api/v1/auth/ws-token` (valid JWT) → returns `{token, expires_at}` (requires signed-in user)
+- [ ] `POST /auth/login` (valid creds) → HX-Redirect to /dashboard (blocked: Supabase project paused)
+- [ ] `POST /api/v1/auth/ws-token` (valid JWT) → returns `{token, expires_at}` (blocked: Supabase project paused)
 
 ---
 
