@@ -90,7 +90,7 @@ func (s *matchService) GetMatches(ctx context.Context, userID uuid.UUID, f Match
 // DismissMatch marks a match as dismissed so it no longer appears in results.
 func (s *matchService) DismissMatch(ctx context.Context, userID, matchedUserID uuid.UUID) error {
 	_, err := s.pool.Exec(ctx,
-		`UPDATE match_cache SET dismissed = true, updated_at = NOW()
+		`UPDATE match_cache SET dismissed = true, computed_at = NOW()
 		 WHERE user_id = $1 AND matched_user_id = $2`,
 		userID, matchedUserID,
 	)
@@ -155,7 +155,7 @@ func (s *matchService) GetExplanation(ctx context.Context, matchedUserID, curren
 
 	// Persist so subsequent calls are free
 	_, _ = s.pool.Exec(ctx,
-		`UPDATE match_cache SET explanation = $3, updated_at = NOW()
+		`UPDATE match_cache SET explanation = $3, computed_at = NOW()
 		 WHERE user_id = $1 AND matched_user_id = $2`,
 		currentUserID, matchedUserID, text)
 
@@ -240,7 +240,7 @@ func (s *matchService) RefreshCacheForUser(ctx context.Context, userID uuid.UUID
 			ON CONFLICT (user_id, matched_user_id) DO UPDATE SET
 				score      = EXCLUDED.score,
 				categories = EXCLUDED.categories,
-				updated_at = NOW()
+				computed_at = NOW()
 			-- dismissed and explanation are intentionally NOT overwritten
 		`, userID, c.userID, c.score, cats)
 		if err != nil {

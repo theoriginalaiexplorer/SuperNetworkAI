@@ -54,7 +54,7 @@ func (h *InternalHandler) RefreshMatches(c fiber.Ctx) error {
 		  AND NOT EXISTS (
 			SELECT 1 FROM match_cache mc
 			WHERE mc.user_id = p.user_id
-			  AND mc.updated_at > NOW() - INTERVAL '6 hours'
+			  AND mc.computed_at > NOW() - INTERVAL '6 hours'
 		  )
 		LIMIT 100
 	`)
