@@ -34,11 +34,16 @@ Format: each entry lists what was added, what was changed, and what the phase ta
 ### Test criteria passed
 - [x] `go build ./...` — no errors
 - [x] `bun typecheck` — no errors
-- [x] `GET  /healthz`, `/readyz` — pass
-- [x] `GET  localhost:3000/`, `/login`, `/signup` — 200
-- [x] `GET  localhost:3000/dashboard` (unauthenticated) — 302
-- [x] `POST /api/v1/onboarding/import-cv` (no auth) — 401
-- [ ] End-to-end CV import with authenticated user (requires live auth token + hosted PDF)
+- [x] `GET localhost:3001/healthz` → `{"status":"ok"}`
+- [x] `GET localhost:3001/readyz` → `{"status":"ready"}`
+- [x] `GET localhost:3000/healthz` → `{"status":"ok"}`
+- [x] `GET localhost:3000/` → 200 (landing page renders)
+- [x] `GET localhost:3000/login` → 200
+- [x] `GET localhost:3000/signup` → 200
+- [x] `GET localhost:3000/dashboard` (no auth) → 302
+- [x] `POST /api/v1/onboarding/import-cv` (no auth) → 401
+- [x] Groq API (llama-3.3-70b-versatile) — reachable via CVStructurer
+- [ ] End-to-end CV import with authenticated user + hosted PDF URL (requires signed-in user)
 
 ---
 
@@ -67,8 +72,13 @@ Format: each entry lists what was added, what was changed, and what the phase ta
 ### Test criteria passed
 - [x] `go build ./...` — no errors
 - [x] `bun typecheck` — no errors
-- [ ] Complete 5 onboarding steps → `profile.onboarding_complete = true` (requires live server)
-- [ ] `profile.embedding_status` changes to 'current' within 5s (requires Ollama)
+- [x] Groq API (llama-3.1-8b-instant) — reachable, JSON mode response confirmed
+- [x] Ollama `nomic-embed-text` — model pulled, 768-dim embeddings verified
+- [x] `GET /api/v1/users/me` (no auth) → 401 UNAUTHORIZED
+- [x] `PATCH /api/v1/profiles/me` (no auth) → 401 UNAUTHORIZED
+- [x] `POST /api/v1/onboarding/ikigai` (no auth) → 401 UNAUTHORIZED
+- [ ] Complete 5 onboarding steps → `profile.onboarding_complete = true` (requires signed-in user)
+- [ ] `profile.embedding_status` → `current` within 5s of profile update (requires signed-in user)
 
 ---
 
@@ -94,16 +104,18 @@ Format: each entry lists what was added, what was changed, and what the phase ta
 ### Test criteria passed
 - [x] `go build ./...` — no errors
 - [x] `bun typecheck` — no errors
-- [ ] `POST /auth/login` (valid creds) → HX-Redirect to /dashboard (requires live Supabase)
-- [ ] `GET /dashboard` (no cookie) → redirects to /login (requires live server)
-- [ ] `POST /api/v1/auth/ws-token` (valid JWT) → returns token + expires_at (requires live server)
+- [x] `GET /dashboard` (no session cookie) → 302 redirect to /login
+- [x] `POST /api/v1/auth/ws-token` (no auth) → 401 UNAUTHORIZED
+- [x] `GET /swagger/` → 200; `GET /swagger/doc.json` → 200 valid JSON spec
+- [ ] `POST /auth/login` (valid creds) → HX-Redirect to /dashboard (requires live Supabase user)
+- [ ] `POST /api/v1/auth/ws-token` (valid JWT) → returns `{token, expires_at}` (requires signed-in user)
 
 ---
 
 ## [phase/0-foundation] — 2026-03-01
 
 ### Added
-- `backend/go.mod` + `backend/go.sum` — Go module (Go 1.23, Fiber v3, pgx v5, jwx v2, godotenv)
+- `backend/go.mod` + `backend/go.sum` — Go module (Go 1.24, Fiber v3, pgx v5, jwx v2, godotenv)
 - `backend/main.go` — composition root: Fiber app, middleware registration, graceful shutdown
 - `backend/internal/config/config.go` — env loading with fail-fast on missing required vars
 - `backend/internal/model/errors.go` — `AppError` type, exhaustive error code registry, Fiber `ErrorHandler`
@@ -135,11 +147,11 @@ Format: each entry lists what was added, what was changed, and what the phase ta
 
 ### Test criteria passed
 - [x] `curl localhost:3001/healthz` → `{"status":"ok"}`
-- [x] `curl localhost:3001/readyz` → does not crash
+- [x] `curl localhost:3001/readyz` → `{"status":"ready"}` (DB connection verified)
 - [x] `curl localhost:3000/healthz` → `{"status":"ok"}`
-- [x] `docker build backend/` → succeeds, image < 30MB
-- [x] `docker build frontend/` → succeeds
-- [ ] `make migrate-up` → requires live Supabase DB creds
+- [ ] `docker build backend/` → pending (no Docker daemon in dev env)
+- [ ] `docker build frontend/` → pending (no Docker daemon in dev env)
+- [ ] `make migrate-up` → pending (requires running migrations against Supabase)
 
 ---
 
