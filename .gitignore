@@ -33,3 +33,4 @@ backend/tmp/
 
 # Claude local settings (user-specific)
 .claude/settings.local.json
+tmp/
