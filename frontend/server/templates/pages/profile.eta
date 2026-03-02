@@ -20,7 +20,7 @@
     <% } else { %>
       <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white fw-bold"
            style="width:80px;height:80px;font-size:2rem;">
-        <%= (p.display_name?.[0] ?? '?').toUpperCase() %>
+        <%= (p.display_name?.[0] ?? "?").toUpperCase() %>
       </div>
     <% } %>
     <div class="flex-grow-1">
