@@ -1,10 +1,11 @@
-<% layout("../layouts/base", { title: (it.profile?.display_name ?? "Profile") + " — SuperNetworkAI" }) %>
+<% layout("../layouts/base", { title: (it.profile?.display_name || "Profile") + " — SuperNetworkAI" }) %>
 
 <nav class="navbar navbar-expand-lg bg-body-tertiary border-bottom">
   <div class="container-fluid">
     <a class="navbar-brand fw-bold" href="/dashboard">SuperNetworkAI</a>
     <div class="ms-auto d-flex gap-3">
       <a href="/discover" class="nav-link">Discover</a>
+      <a href="/connections" class="nav-link">Connections</a>
       <a href="/messages" class="nav-link">Messages</a>
       <a href="/auth/logout" class="btn btn-outline-secondary btn-sm">Log out</a>
     </div>
@@ -13,6 +14,7 @@
 
 <main class="container py-5" style="max-width: 760px;">
   <% const p = it.profile; const ik = it.ikigai; const isOwn = it.isOwn; %>
+  <% const profileId = p.user_id || p.id; %>
 
   <div class="d-flex align-items-start gap-4 mb-4">
     <% if (p.avatar_url) { %>
@@ -20,30 +22,33 @@
     <% } else { %>
       <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white fw-bold"
            style="width:80px;height:80px;font-size:2rem;">
-        <%= (p.display_name?.[0] ?? "?").toUpperCase() %>
+        <%= (p.display_name || "?")[0].toUpperCase() %>
       </div>
     <% } %>
     <div class="flex-grow-1">
       <h1 class="h3 mb-0 fw-bold"><%= p.display_name %></h1>
       <p class="text-muted mb-1"><%= p.tagline %></p>
+      <% const intent = p.intent || []; %>
       <div class="d-flex flex-wrap gap-1 mt-1">
-        <% (p.intent ?? []).forEach(i => { %>
+        <% for (const i of intent) { %>
           <span class="badge bg-primary-subtle text-primary-emphasis text-capitalize"><%= i %></span>
-        <% }) %>
-        <span class="badge bg-light text-muted border"><%= p.availability?.replace('-',' ') %></span>
+        <% } %>
+        <% if (p.availability) { %>
+          <span class="badge bg-light text-muted border"><%= p.availability.replace('-',' ') %></span>
+        <% } %>
       </div>
     </div>
     <% if (isOwn) { %>
       <a href="/profile/me/edit" class="btn btn-outline-secondary btn-sm">Edit profile</a>
     <% } else { %>
       <%
-        const cs = it.connectionStatus ?? 'none';
+        const cs = it.connectionStatus || 'none';
         const cDir = it.connectionDirection;
         const cId = it.connectionId;
       %>
       <div id="profile-connect-btn">
         <% if (cs === 'accepted') { %>
-          <a href="/messages?userId=<%= p.user_id ?? p.id %>"
+          <a href="/messages/new?userId=<%= profileId %>"
              class="btn btn-primary btn-sm">Message</a>
         <% } else if (cs === 'pending' && cDir === 'sent') { %>
           <button class="btn btn-outline-secondary btn-sm" disabled>Pending&hellip;</button>
@@ -56,7 +61,7 @@
           </button>
         <% } else { %>
           <button class="btn btn-primary btn-sm"
-                  hx-post="/connections/request/<%= p.user_id ?? p.id %>"
+                  hx-post="/connections/request/<%= profileId %>"
                   hx-target="#profile-connect-btn"
                   hx-swap="innerHTML">
             Connect
@@ -73,42 +78,47 @@
     </section>
   <% } %>
 
-  <% if (ik?.ai_summary) { %>
+  <% if (ik && ik.ai_summary) { %>
     <section class="mb-4">
       <h2 class="h6 text-muted text-uppercase mb-2">Ikigai</h2>
       <p class="fst-italic"><%= ik.ai_summary %></p>
     </section>
   <% } %>
 
-  <% if ((p.skills ?? []).length > 0) { %>
+  <% const skills = p.skills || []; %>
+  <% if (skills.length > 0) { %>
     <section class="mb-4">
       <h2 class="h6 text-muted text-uppercase mb-2">Skills</h2>
       <div class="d-flex flex-wrap gap-2">
-        <% (p.skills ?? []).forEach(s => { %>
+        <% for (const s of skills) { %>
           <span class="badge bg-light text-dark border"><%= s %></span>
-        <% }) %>
+        <% } %>
       </div>
     </section>
   <% } %>
 
-  <% if ((p.interests ?? []).length > 0) { %>
+  <% const interests = p.interests || []; %>
+  <% if (interests.length > 0) { %>
     <section class="mb-4">
       <h2 class="h6 text-muted text-uppercase mb-2">Interests</h2>
       <div class="d-flex flex-wrap gap-2">
-        <% (p.interests ?? []).forEach(i => { %>
+        <% for (const i of interests) { %>
           <span class="badge bg-light text-dark border"><%= i %></span>
-        <% }) %>
+        <% } %>
       </div>
     </section>
   <% } %>
 
-  <section class="mb-4">
-    <h2 class="h6 text-muted text-uppercase mb-2">Links</h2>
-    <div class="d-flex flex-wrap gap-3">
-      <% if (p.linkedin_url) { %><a href="<%= p.linkedin_url %>" target="_blank" rel="noopener">LinkedIn</a><% } %>
-      <% if (p.github_url) { %><a href="<%= p.github_url %>" target="_blank" rel="noopener">GitHub</a><% } %>
-      <% if (p.portfolio_url) { %><a href="<%= p.portfolio_url %>" target="_blank" rel="noopener">Portfolio</a><% } %>
-      <% if (p.twitter_url) { %><a href="<%= p.twitter_url %>" target="_blank" rel="noopener">Twitter / X</a><% } %>
-    </div>
-  </section>
+  <% const hasLinks = p.linkedin_url || p.github_url || p.portfolio_url || p.twitter_url; %>
+  <% if (hasLinks) { %>
+    <section class="mb-4">
+      <h2 class="h6 text-muted text-uppercase mb-2">Links</h2>
+      <div class="d-flex flex-wrap gap-3">
+        <% if (p.linkedin_url) { %><a href="<%= p.linkedin_url %>" target="_blank" rel="noopener">LinkedIn</a><% } %>
+        <% if (p.github_url) { %><a href="<%= p.github_url %>" target="_blank" rel="noopener">GitHub</a><% } %>
+        <% if (p.portfolio_url) { %><a href="<%= p.portfolio_url %>" target="_blank" rel="noopener">Portfolio</a><% } %>
+        <% if (p.twitter_url) { %><a href="<%= p.twitter_url %>" target="_blank" rel="noopener">Twitter / X</a><% } %>
+      </div>
+    </section>
+  <% } %>
 </main>

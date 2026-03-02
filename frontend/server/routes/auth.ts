@@ -113,7 +113,10 @@ authRoutes.post("/signup", async (c) => {
   try {
     const cred = await createUserWithEmailAndPassword(firebaseAuth, email, password);
     console.log(`[AUTH] Signup success for: ${email}, UID: ${cred.user.uid}`);
-    await sendEmailVerification(cred.user);
+    // Best-effort — quota-exceeded on free tier should not abort signup
+    await sendEmailVerification(cred.user).catch((e: any) => {
+      console.warn(`[AUTH] Verification email skipped for ${email}:`, e.code);
+    });
     const userUuid = await firebaseUidToUuid(cred.user.uid);
     const bffJwt = await signBffJwt(userUuid, cred.user.email ?? "");
     setSessionCookies(c, { accessToken: bffJwt, refreshToken: cred.user.refreshToken });
