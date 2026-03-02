@@ -17,12 +17,17 @@ onboardingRoutes.post("/step1", async (c) => {
   const body = await c.req.parseBody();
   const api = apiClient(session.accessToken);
 
-  await api.patch("/api/v1/profiles/me", {
-    display_name: body.display_name,
-    tagline: body.tagline || undefined,
-  });
+  try {
+    await api.patch("/api/v1/profiles/me", {
+      display_name: body.display_name,
+      tagline: body.tagline || undefined,
+    });
+  } catch (e: any) {
+    return c.html(`<div id="step-error" class="alert alert-danger mt-3">${e.message ?? "Failed to save. Please try again."}</div>`);
+  }
 
-  return renderPartial(c, "pages/onboarding/step2-ikigai", {});
+  c.header("HX-Redirect", "/onboarding/step2");
+  return c.body(null, 204);
 });
 
 // Step 2 — Ikigai
@@ -33,14 +38,19 @@ onboardingRoutes.post("/step2", async (c) => {
   const body = await c.req.parseBody();
   const api = apiClient(session.accessToken);
 
-  await api.post("/api/v1/onboarding/ikigai", {
-    what_you_love:            body.what_you_love,
-    what_youre_good_at:       body.what_youre_good_at,
-    what_world_needs:         body.what_world_needs,
-    what_you_can_be_paid_for: body.what_you_can_be_paid_for,
-  });
+  try {
+    await api.post("/api/v1/onboarding/ikigai", {
+      what_you_love:            body.what_you_love,
+      what_youre_good_at:       body.what_youre_good_at,
+      what_world_needs:         body.what_world_needs,
+      what_you_can_be_paid_for: body.what_you_can_be_paid_for,
+    });
+  } catch (e: any) {
+    return c.html(`<div id="step-error" class="alert alert-danger mt-3">${e.message ?? "Failed to save. Please try again."}</div>`);
+  }
 
-  return renderPartial(c, "pages/onboarding/step3-skills", {});
+  c.header("HX-Redirect", "/onboarding/step3");
+  return c.body(null, 204);
 });
 
 // Step 3 — skills & interests
@@ -54,9 +64,14 @@ onboardingRoutes.post("/step3", async (c) => {
   const skills = [body["skills[]"]].flat().filter(Boolean) as string[];
   const interests = [body["interests[]"]].flat().filter(Boolean) as string[];
 
-  await api.patch("/api/v1/profiles/me", { skills, interests });
+  try {
+    await api.patch("/api/v1/profiles/me", { skills, interests });
+  } catch (e: any) {
+    return c.html(`<div id="step-error" class="alert alert-danger mt-3">${e.message ?? "Failed to save. Please try again."}</div>`);
+  }
 
-  return renderPartial(c, "pages/onboarding/step4-intent", {});
+  c.header("HX-Redirect", "/onboarding/step4");
+  return c.body(null, 204);
 });
 
 // Step 4 — intent & availability
@@ -69,13 +84,18 @@ onboardingRoutes.post("/step4", async (c) => {
 
   const intent = [body["intent[]"]].flat().filter(Boolean) as string[];
 
-  await api.patch("/api/v1/profiles/me", {
-    intent,
-    availability:  body.availability,
-    working_style: body.working_style,
-  });
+  try {
+    await api.patch("/api/v1/profiles/me", {
+      intent,
+      availability:  body.availability,
+      working_style: body.working_style,
+    });
+  } catch (e: any) {
+    return c.html(`<div id="step-error" class="alert alert-danger mt-3">${e.message ?? "Failed to save. Please try again."}</div>`);
+  }
 
-  return renderPartial(c, "pages/onboarding/step5-links", {});
+  c.header("HX-Redirect", "/onboarding/step5");
+  return c.body(null, 204);
 });
 
 // CV import — calls Go API, returns structured CVData JSON for HTMX pre-fill
@@ -109,16 +129,17 @@ onboardingRoutes.post("/step5", async (c) => {
   const body = await c.req.parseBody();
   const api = apiClient(session.accessToken);
 
-  // Save optional links
-  await api.patch("/api/v1/profiles/me", {
-    linkedin_url:  body.linkedin_url  || undefined,
-    github_url:    body.github_url    || undefined,
-    portfolio_url: body.portfolio_url || undefined,
-    twitter_url:   body.twitter_url   || undefined,
-  });
-
-  // Mark onboarding complete
-  await api.post("/api/v1/onboarding/complete", {});
+  try {
+    await api.patch("/api/v1/profiles/me", {
+      linkedin_url:  body.linkedin_url  || undefined,
+      github_url:    body.github_url    || undefined,
+      portfolio_url: body.portfolio_url || undefined,
+      twitter_url:   body.twitter_url   || undefined,
+    });
+    await api.post("/api/v1/onboarding/complete", {});
+  } catch (e: any) {
+    return c.html(`<div id="step-error" class="alert alert-danger mt-3">${e.message ?? "Failed to save. Please try again."}</div>`);
+  }
 
   c.header("HX-Redirect", "/dashboard");
   return c.body(null, 204);

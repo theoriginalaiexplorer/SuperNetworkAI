@@ -57,7 +57,7 @@
     </div>
   </div>
 
-  <form hx-post="/onboarding/step5" hx-target="#step-content" hx-swap="outerHTML" id="step-content">
+  <form hx-post="/onboarding/step5" hx-target="#step-error" hx-swap="outerHTML">
     <div class="mb-3">
       <label class="form-label fw-medium">LinkedIn</label>
       <input id="linkedin_url" type="url" name="linkedin_url" class="form-control"
@@ -79,6 +79,7 @@
              placeholder="https://twitter.com/yourhandle" />
     </div>
 
+    <div id="step-error"></div>
     <div class="d-flex justify-content-between mt-4">
       <a href="/onboarding/step4" class="btn btn-outline-secondary">← Back</a>
       <button type="submit" class="btn btn-success px-4">Complete profile →</button>

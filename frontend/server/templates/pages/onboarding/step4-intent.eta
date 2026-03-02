@@ -14,7 +14,7 @@
   <h2 class="fw-bold mb-1">What are you looking for?</h2>
   <p class="text-muted mb-4">You can select multiple. This controls who you appear to in match results.</p>
 
-  <form hx-post="/onboarding/step4" hx-target="#step-content" hx-swap="outerHTML" id="step-content">
+  <form hx-post="/onboarding/step4" hx-target="#step-error" hx-swap="outerHTML">
     <!-- Intent (multi-select via checkboxes) -->
     <div class="mb-4">
       <label class="form-label fw-medium">I'm open to connecting as a… <span class="text-danger">*</span></label>
@@ -54,6 +54,7 @@
       </select>
     </div>
 
+    <div id="step-error"></div>
     <div class="d-flex justify-content-between mt-4">
       <a href="/onboarding/step3" class="btn btn-outline-secondary">← Back</a>
       <button type="submit" class="btn btn-primary px-4">Next →</button>

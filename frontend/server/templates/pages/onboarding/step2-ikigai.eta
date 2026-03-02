@@ -14,7 +14,7 @@
   <h2 class="fw-bold mb-1">Discover your Ikigai</h2>
   <p class="text-muted mb-4">Your answers power our AI matching. Be specific — quality over length.</p>
 
-  <form hx-post="/onboarding/step2" hx-target="#step-content" hx-swap="outerHTML" id="step-content">
+  <form hx-post="/onboarding/step2" hx-target="#step-error" hx-swap="outerHTML">
     <div class="mb-3">
       <label class="form-label fw-medium">What do you love? <span class="text-danger">*</span></label>
       <textarea name="what_you_love" class="form-control" rows="3" required
@@ -35,6 +35,7 @@
       <textarea name="what_you_can_be_paid_for" class="form-control" rows="3" required
                 placeholder="e.g. Software consulting, technical writing, SaaS product development"></textarea>
     </div>
+    <div id="step-error"></div>
     <div class="d-flex justify-content-between mt-4">
       <a href="/onboarding/step1" class="btn btn-outline-secondary">← Back</a>
       <button type="submit" class="btn btn-primary px-4">Next →</button>

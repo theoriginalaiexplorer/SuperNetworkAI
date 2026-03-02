@@ -14,7 +14,7 @@
   <h2 class="fw-bold mb-1">Your skills & interests</h2>
   <p class="text-muted mb-4">Add at least 3 skills. These are used directly in AI matching.</p>
 
-  <form hx-post="/onboarding/step3" hx-target="#step-content" hx-swap="outerHTML" id="step-content">
+  <form hx-post="/onboarding/step3" hx-target="#step-error" hx-swap="outerHTML">
     <!-- Skills -->
     <div class="mb-4">
       <label class="form-label fw-medium">Skills</label>
@@ -55,6 +55,7 @@
       </div>
     </div>
 
+    <div id="step-error"></div>
     <div class="d-flex justify-content-between mt-4">
       <a href="/onboarding/step2" class="btn btn-outline-secondary">← Back</a>
       <button type="submit" class="btn btn-primary px-4">Next →</button>
