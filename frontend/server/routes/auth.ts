@@ -9,6 +9,7 @@ import {
 } from "firebase/auth";
 import { SignJWT } from "jose";
 import { setSessionCookies, clearSessionCookies } from "../middleware/session";
+import { apiClient } from "../lib/api";
 
 const firebaseConfig = {
   apiKey:     process.env.FIREBASE_API_KEY!,
@@ -84,6 +85,8 @@ authRoutes.post("/login", async (c) => {
     const userUuid = await firebaseUidToUuid(cred.user.uid);
     const bffJwt = await signBffJwt(userUuid, cred.user.email ?? "");
     setSessionCookies(c, { accessToken: bffJwt, refreshToken: cred.user.refreshToken });
+    // Ensure user + profile rows exist in DB before any onboarding calls
+    await apiClient(bffJwt).get("/api/v1/users/me").catch(() => {});
     // HTMX request: use HX-Redirect; plain form POST: use 303 redirect
     if (c.req.header("HX-Request")) {
       c.header("HX-Redirect", "/dashboard");
@@ -114,6 +117,8 @@ authRoutes.post("/signup", async (c) => {
     const userUuid = await firebaseUidToUuid(cred.user.uid);
     const bffJwt = await signBffJwt(userUuid, cred.user.email ?? "");
     setSessionCookies(c, { accessToken: bffJwt, refreshToken: cred.user.refreshToken });
+    // Ensure user + profile rows exist in DB before onboarding steps write to them
+    await apiClient(bffJwt).get("/api/v1/users/me").catch(() => {});
     // HTMX request: use HX-Redirect; plain form POST: use 303 redirect
     if (c.req.header("HX-Request")) {
       c.header("HX-Redirect", "/onboarding/step1");
