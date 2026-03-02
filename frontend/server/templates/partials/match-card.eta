@@ -10,7 +10,7 @@
           <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center
                       text-white fw-bold flex-shrink-0"
                style="width:48px;height:48px;font-size:1.25rem;">
-            <%= (it.match.display_name?.[0] ?? "?").toUpperCase() %>
+            <%= (it.match.display_name || "?")[0].toUpperCase() %>
           </div>
         <% } %>
         <div class="flex-grow-1 overflow-hidden">
@@ -20,23 +20,25 @@
           <% } %>
         </div>
         <span class="ms-auto badge bg-success-subtle text-success-emphasis flex-shrink-0">
-          <%= Math.round(it.match.score * 100) %>%
+          <%= Math.round(it.match.score * 100) + "%" %>
         </span>
       </div>
 
+      <% const cats = it.match.categories || []; %>
       <div class="d-flex flex-wrap gap-1 mb-2">
-        <% (it.match.categories ?? []).forEach(cat => { %>
+        <% for (const cat of cats) { %>
           <span class="badge bg-primary-subtle text-primary-emphasis text-capitalize"><%= cat %></span>
-        <% }) %>
+        <% } %>
       </div>
 
-      <% if ((it.match.skills ?? []).length > 0) { %>
+      <% const skills = it.match.skills || []; %>
+      <% if (skills.length > 0) { %>
         <div class="d-flex flex-wrap gap-1 mb-3">
-          <% it.match.skills.slice(0, 5).forEach(s => { %>
+          <% for (const s of skills.slice(0, 5)) { %>
             <span class="badge bg-light text-dark border small"><%= s %></span>
-          <% }) %>
-          <% if (it.match.skills.length > 5) { %>
-            <span class="badge bg-light text-muted border small">+<%= it.match.skills.length - 5 %> more</span>
+          <% } %>
+          <% if (skills.length > 5) { %>
+            <span class="badge bg-light text-muted border small">+<%= skills.length - 5 %> more</span>
           <% } %>
         </div>
       <% } %>

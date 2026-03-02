@@ -5,8 +5,8 @@
     <a class="navbar-brand fw-bold" href="/dashboard">SuperNetworkAI</a>
     <div class="ms-auto d-flex align-items-center gap-3">
       <a href="/discover" class="nav-link active fw-semibold">Discover</a>
-      <a href="/messages" class="nav-link">Messages</a>
       <a href="/connections" class="nav-link">Connections</a>
+      <a href="/messages" class="nav-link">Messages</a>
       <a href="/auth/logout" class="btn btn-outline-secondary btn-sm">Log out</a>
     </div>
   </div>
@@ -51,15 +51,17 @@
   </div>
 
   <!-- Category filter tabs -->
-  <ul class="nav nav-tabs mb-4" id="categoryTabs">
+  <ul class="nav nav-tabs mb-4" id="categoryTabs" x-data="{ active: '<%= currentCat %>' }">
     <% cats.forEach(cat => { %>
       <li class="nav-item">
-        <a class="nav-link <%= currentCat === cat ? "active" : "" %>"
+        <a class="nav-link"
+           :class="active === '<%= cat %>' ? 'active' : ''"
            href="/discover?category=<%= cat %>"
            hx-get="/discover/matches?category=<%= cat %>"
            hx-target="#match-list"
            hx-swap="innerHTML"
-           hx-push-url="/discover?category=<%= cat %>">
+           hx-push-url="/discover?category=<%= cat %>"
+           @click="active = '<%= cat %>'">
           <%= labels[cat] %>
         </a>
       </li>

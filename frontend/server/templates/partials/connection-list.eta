@@ -47,7 +47,7 @@
 
             <div class="d-flex gap-2 flex-wrap">
               <% if (tab === 'accepted') { %>
-                <a href="/messages?userId=<%= conn.other_user_id %>"
+                <a href="/messages/new?userId=<%= conn.other_user_id %>"
                    class="btn btn-primary btn-sm">Message</a>
                 <a href="/profile/<%= conn.other_user_id %>"
                    class="btn btn-outline-secondary btn-sm">View profile</a>

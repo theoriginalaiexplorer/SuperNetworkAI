@@ -86,17 +86,17 @@ type CVData struct {
 
 // Match represents a cached match entry plus a profile snapshot for display.
 type Match struct {
-	MatchedUserID uuid.UUID
-	Score         float64
-	Categories    []string
-	Explanation   string
-	Dismissed     bool
+	MatchedUserID uuid.UUID `json:"matched_user_id"`
+	Score         float64   `json:"score"`
+	Categories    []string  `json:"categories"`
+	Explanation   string    `json:"explanation"`
+	Dismissed     bool      `json:"dismissed"`
 	// Profile snapshot (populated by MatchService.GetMatches)
-	DisplayName string
-	Tagline     string
-	Skills      []string
-	Intent      []string
-	AvatarURL   string
+	DisplayName string   `json:"display_name"`
+	Tagline     string   `json:"tagline"`
+	Skills      []string `json:"skills"`
+	Intent      []string `json:"intent"`
+	AvatarURL   string   `json:"avatar_url"`
 }
 
 // MatchFilter controls which matches to return.

@@ -1,16 +1,18 @@
-<% if ((it.matches ?? []).length === 0) { %>
+<% const matches = it.matches || []; %>
+<% const limit = it.limit || 20; %>
+<% if (matches.length === 0) { %>
   <div class="col-12 text-center py-5 text-muted">
     <p class="mb-1 fs-5">No matches yet.</p>
     <p class="small mb-0">Complete your profile and Ikigai answers to start getting discovered.</p>
   </div>
 <% } else { %>
-  <% for (const match of it.matches) { %>
+  <% for (const match of matches) { %>
     <%~ include("./match-card", { match }) %>
   <% } %>
-  <% if (it.matches.length >= (it.limit ?? 20)) { %>
+  <% if (matches.length >= limit) { %>
     <div class="col-12 text-center mt-3">
       <button class="btn btn-outline-primary"
-              hx-get="/discover/matches?category=<%= it.category || "" %>&offset=<%= (it.offset || 0) + it.matches.length %>"
+              hx-get="/discover/matches?category=<%= it.category || "" %>&offset=<%= (it.offset || 0) + matches.length %>"
               hx-target="#match-list"
               hx-swap="innerHTML">
         Load more

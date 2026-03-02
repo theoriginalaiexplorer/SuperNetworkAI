@@ -1,10 +1,11 @@
-<% if ((it.results ?? []).length === 0) { %>
+<% const results = it.results || []; %>
+<% if (results.length === 0) { %>
   <div class="col-12 text-center py-5 text-muted">
     <p class="mb-1 fs-5">No results found.</p>
     <p class="small mb-0">Try different keywords or broaden your search.</p>
   </div>
 <% } else { %>
-  <% for (const r of it.results) { %>
+  <% for (const r of results) { %>
     <div class="col-md-6 col-lg-4">
       <div class="card h-100 shadow-sm border-primary-subtle">
         <div class="card-body d-flex flex-column">
@@ -17,7 +18,7 @@
               <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center
                           text-white fw-bold flex-shrink-0"
                    style="width:48px;height:48px;font-size:1.25rem;">
-                <%= (r.display_name?.[0] ?? "?").toUpperCase() %>
+                <%= (r.display_name || "?")[0].toUpperCase() %>
               </div>
             <% } %>
             <div class="flex-grow-1 overflow-hidden">
@@ -27,23 +28,25 @@
               <% } %>
             </div>
             <span class="ms-auto badge bg-primary-subtle text-primary-emphasis flex-shrink-0">
-              <%= Math.round(r.score * 100) %>%
+              <%= Math.round(r.score * 100) + "%" %>
             </span>
           </div>
 
+          <% const intent = r.intent || []; %>
           <div class="d-flex flex-wrap gap-1 mb-2">
-            <% (r.intent ?? []).forEach(i => { %>
+            <% for (const i of intent) { %>
               <span class="badge bg-primary-subtle text-primary-emphasis text-capitalize"><%= i %></span>
-            <% }) %>
+            <% } %>
           </div>
 
-          <% if ((r.skills ?? []).length > 0) { %>
+          <% const skills = r.skills || []; %>
+          <% if (skills.length > 0) { %>
             <div class="d-flex flex-wrap gap-1 mb-3">
-              <% r.skills.slice(0, 5).forEach(s => { %>
+              <% for (const s of skills.slice(0, 5)) { %>
                 <span class="badge bg-light text-dark border small"><%= s %></span>
-              <% }) %>
-              <% if (r.skills.length > 5) { %>
-                <span class="badge bg-light text-muted border small">+<%= r.skills.length - 5 %> more</span>
+              <% } %>
+              <% if (skills.length > 5) { %>
+                <span class="badge bg-light text-muted border small">+<%= skills.length - 5 %> more</span>
               <% } %>
             </div>
           <% } %>

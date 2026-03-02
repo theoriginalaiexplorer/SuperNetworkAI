@@ -9,6 +9,7 @@
       <a href="/messages" class="nav-link">Messages</a>
       <a href="/auth/logout" class="btn btn-outline-secondary btn-sm">Log out</a>
     </div>
+
   </div>
 </nav>
 
@@ -17,22 +18,26 @@
 
   <% const tab = it.tab ?? "accepted"; %>
 
-  <!-- Tab switcher (HTMX, no Bootstrap JS needed) -->
-  <div class="d-flex gap-2 mb-4 border-bottom pb-2">
-    <a class="btn btn-sm <%= tab === 'accepted' ? "btn-primary" : "btn-outline-secondary" %>"
+  <!-- Tab switcher (HTMX + Alpine for reactive active state) -->
+  <div class="d-flex gap-2 mb-4 border-bottom pb-2" x-data="{ tab: '<%= tab %>' }">
+    <a class="btn btn-sm"
+       :class="tab === 'accepted' ? 'btn-primary' : 'btn-outline-secondary'"
        href="/connections?tab=accepted"
        hx-get="/connections/list?tab=accepted"
        hx-target="#connection-list"
        hx-swap="innerHTML"
-       hx-push-url="/connections?tab=accepted">
+       hx-push-url="/connections?tab=accepted"
+       @click="tab = 'accepted'">
       Accepted
     </a>
-    <a class="btn btn-sm <%= tab === 'pending' ? "btn-primary" : "btn-outline-secondary" %>"
+    <a class="btn btn-sm"
+       :class="tab === 'pending' ? 'btn-primary' : 'btn-outline-secondary'"
        href="/connections?tab=pending"
        hx-get="/connections/list?tab=pending"
        hx-target="#connection-list"
        hx-swap="innerHTML"
-       hx-push-url="/connections?tab=pending">
+       hx-push-url="/connections?tab=pending"
+       @click="tab = 'pending'">
       Pending requests
     </a>
   </div>
