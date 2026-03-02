@@ -11,6 +11,46 @@ Format: each entry lists what was added, what was changed, and what the phase ta
 
 ---
 
+## [phase/8-privacy] — 2026-03-02
+
+### Added
+- `backend/internal/handler/blocks.go` — `BlockHandler` with three endpoints:
+  - `POST /api/v1/blocks` — block a user (409 CONFLICT on duplicate; removes existing connection + match_cache entries in both directions)
+  - `DELETE /api/v1/blocks/:userId` — unblock; 404 if block doesn't exist
+  - `DELETE /api/v1/account` — cascade-delete own account (all child rows via FK `ON DELETE CASCADE`); returns 200 `{"status":"deleted"}`
+- `frontend/server/routes/blocks.ts` — BFF block/unblock/account-delete routes:
+  - `POST /blocks/:userId` → calls Go `POST /api/v1/blocks`; returns HTMX Unblock button on success
+  - `DELETE /blocks/:userId` → calls Go `DELETE /api/v1/blocks/:userId`; returns HTMX Block button
+  - `POST /blocks/account/delete` → calls Go `DELETE /api/v1/account`; clears session cookies + `HX-Redirect: /login`
+
+### Changed
+- `backend/main.go` — wired `blockH` with 3 new routes; handler count 31 → 34
+- `frontend/server/routes/pages.ts` — added:
+  - `POST /profile/visibility` (authenticated) — calls Go `PATCH /api/v1/profiles/me/visibility`; returns updated toggle button HTML for HTMX swap
+  - `pageRoutes.route("/blocks", blockRoutes)` — mounts block routes
+- `frontend/server/templates/pages/profile.eta` — updated header action area:
+  - **Own profile**: Edit + visibility toggle (`Public`/`Private` button, HTMX-powered, preserves current state server-side) + Delete Account button (Alpine.js confirm-before-submit pattern)
+  - **Other profile**: Block button alongside existing Connect/Message/Accept/Pending button (HTMX POST/DELETE swap with `hx-confirm`)
+
+### Test criteria passed
+- [x] `go vet ./...` — no errors
+- [x] `bun typecheck` — no errors
+- [x] `GET /readyz` — `{"status":"ready"}`
+- [x] `GET /api/v1/users/bob` (before block) → 200
+- [x] `POST /api/v1/blocks` (block Bob) → 201 `{"status":"blocked"}`
+- [x] `POST /api/v1/blocks` (duplicate) → 409 `CONFLICT`
+- [x] `GET /api/v1/users/bob` (after block) → 403 `FORBIDDEN`
+- [x] `DELETE /api/v1/blocks/bob` (unblock) → 200 `{"status":"unblocked"}`
+- [x] `GET /api/v1/users/bob` (after unblock) → 200
+- [x] `PATCH /api/v1/profiles/me/visibility` (private) → `{"visibility":"private"}`
+- [x] `GET /api/v1/users/bob` (private, not connected) → 403 `FORBIDDEN`
+- [x] `PATCH /api/v1/profiles/me/visibility` (public) → `{"visibility":"public"}`
+- [x] `GET /api/v1/users/bob` (public again) → 200
+- [x] `DELETE /api/v1/account` (throwaway user) → 200 `{"status":"deleted"}`
+- [x] `GET /api/v1/users/me` (valid JWT, user deleted) → 404 `NOT_FOUND`
+
+---
+
 ## [infra/firebase-neon] — 2026-03-01
 
 > Emergency infrastructure swap during Supabase India outage.

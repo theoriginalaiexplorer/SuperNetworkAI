@@ -114,6 +114,7 @@ func main() {
 	connH := handler.NewConnectionHandler(pool, logger)
 	internalH := handler.NewInternalHandler(pool, matchSvc, &wg, logger)
 	convH := handler.NewConversationHandler(pool, logger)
+	blockH := handler.NewBlockHandler(pool, logger)
 
 	// --- WebSocket hub ---
 	authHRef := authH // capture for closure
@@ -149,6 +150,10 @@ func main() {
 	api.Get("/conversations", convH.ListConversations)
 	api.Get("/conversations/:id/messages", convH.GetMessages)
 	api.Patch("/conversations/:id/read", convH.MarkRead)
+
+	api.Post("/blocks", blockH.BlockUser)
+	api.Delete("/blocks/:userId", blockH.UnblockUser)
+	api.Delete("/account", blockH.DeleteAccount)
 
 	// --- WebSocket (auth via first-message token, not JWT) ---
 	app.Get("/ws", func(c fiber.Ctx) error {

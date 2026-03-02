@@ -8,6 +8,7 @@ import { onboardingRoutes } from "./onboarding";
 import { discoverRoutes } from "./discover";
 import { connectionRoutes } from "./connections";
 import { messageRoutes } from "./messages";
+import { blockRoutes } from "./blocks";
 
 export const pageRoutes = new Hono<{ Variables: Variables }>();
 
@@ -81,6 +82,33 @@ authenticated.get("/profile/:id", async (c) => {
   }
 });
 
+// POST /profile/visibility — HTMX toggle; returns updated badge HTML
+authenticated.post("/profile/visibility", async (c) => {
+  const session = c.get("session") as { accessToken: string };
+  const api = apiClient(session.accessToken);
+  const body = await c.req.parseBody();
+  const visibility = body.visibility as string;
+  if (visibility !== "public" && visibility !== "private") {
+    return c.html(`<span class="text-danger small">Invalid visibility value</span>`);
+  }
+  try {
+    await api.patch("/api/v1/profiles/me/visibility", { visibility });
+    const next = visibility === "public" ? "private" : "public";
+    const label = visibility === "public" ? "Public" : "Private";
+    const cls = visibility === "public" ? "btn-outline-success" : "btn-outline-warning";
+    return c.html(
+      `<div id="visibility-toggle">
+         <form hx-post="/profile/visibility" hx-target="#visibility-toggle" hx-swap="outerHTML">
+           <input type="hidden" name="visibility" value="${next}" />
+           <button type="submit" class="btn ${cls} btn-sm w-100">${label} (click to toggle)</button>
+         </form>
+       </div>`
+    );
+  } catch {
+    return c.html(`<span class="text-danger small">Failed to update visibility</span>`);
+  }
+});
+
 // Onboarding steps (no onboarding guard — that would cause redirect loop)
 pageRoutes.route("/onboarding", onboardingRoutes);
 
@@ -92,5 +120,8 @@ pageRoutes.route("/connections", connectionRoutes);
 
 // Messages + WebSocket token — auth handled inside messageRoutes
 pageRoutes.route("/messages", messageRoutes);
+
+// Block / unblock / account delete — auth handled inside blockRoutes
+pageRoutes.route("/blocks", blockRoutes);
 
 pageRoutes.route("/", authenticated);

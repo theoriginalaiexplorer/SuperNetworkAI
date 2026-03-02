@@ -17,7 +17,7 @@
 | 6 | Connections | ✅ Complete | `phase/6-connections` | 2026-03-01 |
 | 7 | Real-Time Messaging | ✅ Complete | `phase/7-messaging` | 2026-03-01 |
 | — | **Infra: Firebase + Neon** | ✅ Complete | `infra/firebase-neon` | 2026-03-01 |
-| 8 | Privacy & Safety | ⬜ Not Started | `phase/8-privacy` | — |
+| 8 | Privacy & Safety | ✅ Complete | `phase/8-privacy` | 2026-03-02 |
 | 9 | Polish & Hardening | ⬜ Not Started | `phase/9-polish` | — |
 | 10 | GCP Deployment | ⬜ Not Started | `phase/10-deploy` | — |
 
@@ -326,6 +326,40 @@ TestCVPipeline                                    →  [x] pass — download+ext
 ### Post-emergency TODOs
 - [ ] Add `auth_mapping` table (firebase_uid → stable UUID) for multi-device consistency
 - [ ] Decide: keep Firebase + Neon permanently, or revert to Supabase when recovered
+
+---
+
+## Phase 8 — Privacy & Safety
+
+**Goal**: Users can block others (blocked users vanish from all results), set profiles private, and permanently delete accounts.
+
+**Completed**: 2026-03-02
+
+### Checklist
+- [x] Go: `handler/blocks.go` — POST /api/v1/blocks (idempotency check + 409), DELETE /api/v1/blocks/:userId, DELETE /api/v1/account (cascade via FK)
+- [x] Go: `main.go` — blockH wired; 3 new routes (handler count 31 → 34)
+- [x] BFF: `routes/blocks.ts` — POST/DELETE /blocks/:userId (HTMX swap returns opposite button), POST /blocks/account/delete (clear cookies + HX-Redirect)
+- [x] BFF: `routes/pages.ts` — POST /profile/visibility (HTMX toggle), mounted blockRoutes at /blocks
+- [x] UI: `pages/profile.eta` — own profile: visibility toggle + delete account (Alpine.js confirm); other profile: Block button (HTMX with hx-confirm)
+- [x] Block side-effects: existing connection deleted, match_cache cleaned both directions on block
+
+### Test Results
+```
+go vet ./...                                                    →  [x] pass
+bun typecheck                                                   →  [x] pass
+GET  /api/v1/users/bob (before block)                          →  [x] 200
+POST /api/v1/blocks (block Bob)                                →  [x] 201 {"status":"blocked"}
+POST /api/v1/blocks (duplicate)                                →  [x] 409 CONFLICT
+GET  /api/v1/users/bob (after block)                           →  [x] 403 FORBIDDEN
+DELETE /api/v1/blocks/bob                                      →  [x] 200 {"status":"unblocked"}
+GET  /api/v1/users/bob (after unblock)                         →  [x] 200
+PATCH /api/v1/profiles/me/visibility → private                 →  [x] {"visibility":"private"}
+GET  /api/v1/users/bob (private, not connected)                →  [x] 403 FORBIDDEN
+PATCH /api/v1/profiles/me/visibility → public                  →  [x] {"visibility":"public"}
+GET  /api/v1/users/bob (public again)                          →  [x] 200
+DELETE /api/v1/account (throwaway user)                        →  [x] 200 {"status":"deleted"}
+GET  /api/v1/users/me (valid JWT, user row deleted)            →  [x] 404 NOT_FOUND
+```
 
 ---
 
